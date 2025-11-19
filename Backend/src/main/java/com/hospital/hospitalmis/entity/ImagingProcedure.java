@@ -1,0 +1,66 @@
+package com.hospital.hospitalmis.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "imaging_procedure")
+public class ImagingProcedure {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "code", nullable = false, unique = true, length = 50)
+    private String code;
+
+    @Column(name = "name", nullable = false, length = 200)
+    private String name;
+
+    @Column(name = "modality", length = 50)
+    private String modality; // XR, CT, MRI,...
+
+    @Column(name = "service_item_id", nullable = false)
+    private Long serviceItemId;
+
+    // getters/setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getModality() {
+        return modality;
+    }
+
+    public void setModality(String modality) {
+        this.modality = modality;
+    }
+
+    public Long getServiceItemId() {
+        return serviceItemId;
+    }
+
+    public void setServiceItemId(Long serviceItemId) {
+        this.serviceItemId = serviceItemId;
+    }
+}
