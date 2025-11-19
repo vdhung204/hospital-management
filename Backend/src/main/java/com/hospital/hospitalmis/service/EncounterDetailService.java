@@ -172,7 +172,7 @@ public class EncounterDetailService {
         }
 
         if (item.getImagingProcedureId() != null) {
-            imagingProcedureRepository.findById(Math.toIntExact(item.getImagingProcedureId()))
+            imagingProcedureRepository.findById(item.getImagingProcedureId())
                     .ifPresent(ip -> dto.setImagingProcedureName(ip.getName()));
         }
 

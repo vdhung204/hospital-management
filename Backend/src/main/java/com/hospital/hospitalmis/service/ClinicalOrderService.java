@@ -6,12 +6,14 @@ import com.hospital.hospitalmis.dto.clinical_result.*;
 import com.hospital.hospitalmis.entity.*;
 import com.hospital.hospitalmis.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ClinicalOrderService {
 
     private final ClinicalOrderRepository clinicalOrderRepository;
@@ -87,7 +89,7 @@ public class ClinicalOrderService {
     }
 
     // ---------------- Nhập kết quả lab cho 1 item ----------------
-    public LabResultResponse addLabResult(Long orderItemId, LabResultCreateRequest req) {
+        public LabResultResponse addLabResult(Long orderItemId, LabResultCreateRequest req) {
         ClinicalOrderItem item = clinicalOrderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new RuntimeException("Order item not found"));
 
@@ -154,7 +156,7 @@ public class ClinicalOrderService {
                     .ifPresent(lt -> dto.setLabTestName(lt.getName()));
         }
         if (item.getImagingProcedureId() != null) {
-            imagingProcedureRepository.findById(Math.toIntExact(item.getImagingProcedureId()))//Math.toIntExact(item.getImagingProcedureId())
+            imagingProcedureRepository.findById(item.getImagingProcedureId())//Math.toIntExact(item.getImagingProcedureId())
                     .ifPresent(ip -> dto.setImagingProcedureName(ip.getName()));
         }
 

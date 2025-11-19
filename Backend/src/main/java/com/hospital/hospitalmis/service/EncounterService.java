@@ -5,12 +5,14 @@ import com.hospital.hospitalmis.entity.*;
 import com.hospital.hospitalmis.repository.*;
 import com.hospital.hospitalmis.repository.EncounterRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class EncounterService {
 
     private final EncounterRepository encounterRepository;

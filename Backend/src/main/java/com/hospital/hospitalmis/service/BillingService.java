@@ -5,6 +5,7 @@ import com.hospital.hospitalmis.dto.invoice.*;
 import com.hospital.hospitalmis.entity.*;
 import com.hospital.hospitalmis.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class BillingService {
 
     private final InvoiceRepository invoiceRepository;
