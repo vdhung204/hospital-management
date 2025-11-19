@@ -56,11 +56,11 @@ Highlight critical cases for doctors’ attention.
 
 Technologies Used
 
-Backend: 
+Backend: Spring Boot
 
-Frontend:
+Frontend: React + Typescript + Vite + Tailwind
 
-Database: 
+Database: MySql
 
 AI Modules: 
 
