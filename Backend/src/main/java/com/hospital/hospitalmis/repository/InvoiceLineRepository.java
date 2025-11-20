@@ -9,5 +9,5 @@ public interface InvoiceLineRepository extends JpaRepository<InvoiceLine, Long> 
 
     List<InvoiceLine> findByInvoice_Id(Long invoiceId);
     boolean existsBySourceTypeAndSourceId(String sourceType, Long sourceId);
-
+    List<InvoiceLine> findBySourceTypeAndSourceId(String sourceType, Long sourceId);
 }

@@ -545,5 +545,151 @@ public class BillingService {
                 .findFirst()
                 .orElse(null);
     }
+    public BillingPreviewResponse getBillingPreview(Long encounterId) {
 
+        Encounter encounter = encounterRepository.findById(encounterId)
+                .orElseThrow(() -> new RuntimeException("Encounter not found"));
+
+        if (encounter.getPatient() == null) {
+            throw new RuntimeException("Encounter has no patient");
+        }
+
+        BillingPreviewResponse res = new BillingPreviewResponse();
+        res.setEncounterId(encounter.getId());
+        res.setPatientId(encounter.getPatient().getId());
+        res.setPatientCode(encounter.getPatient().getPatientCode());
+        res.setPatientName(encounter.getPatient().getFullName());
+
+        java.util.List<ServiceUsageItem> all = new java.util.ArrayList<>();
+
+        // ===== 1. DV khám (CONSULT) =====
+        java.util.List<ServiceItem> consultItems =
+                serviceItemRepository.findByServiceType("CONSULT");
+
+        if (!consultItems.isEmpty()) {
+            ServiceItem consultItem = consultItems.get(0);
+
+            java.util.List<InvoiceLine> lines =
+                    invoiceLineRepository.findBySourceTypeAndSourceId("CONSULT", encounterId);
+
+            ServiceUsageItem item = new ServiceUsageItem();
+            item.setGroup("CONSULT");
+            item.setSourceType("CONSULT");
+            item.setSourceId(encounterId);
+
+            item.setServiceItemId(consultItem.getId());
+            item.setServiceItemCode(consultItem.getCode());
+            item.setServiceItemName(consultItem.getName());
+
+            item.setDescription(consultItem.getName());
+            item.setQuantity(1);
+
+            boolean billed = !lines.isEmpty();
+            item.setBilled(billed);
+            item.setInvoiceId(billed ? lines.get(0).getInvoice().getId() : null);
+
+            all.add(item);
+        }
+
+        // ===== 2. XN + CĐHA từ clinical_order_item =====
+        java.util.List<ClinicalOrderItem> orderItems =
+                clinicalOrderItemRepository.findByClinicalOrder_Encounter_Id(encounterId);
+
+        for (ClinicalOrderItem coi : orderItems) {
+            String type = coi.getItemType(); // "LAB_TEST" hoặc "IMG_PROC"
+
+            String group;
+            String sourceType;
+            if ("LAB_TEST".equalsIgnoreCase(type)) {
+                group = "LAB";
+                sourceType = "LAB";
+            } else if ("IMG_PROC".equalsIgnoreCase(type)) {
+                group = "IMG";
+                sourceType = "IMG";
+            } else {
+                // loại khác thì bỏ qua trong preview billing
+                continue;
+            }
+
+            ServiceUsageItem item = new ServiceUsageItem();
+            item.setGroup(group);
+            item.setSourceType(sourceType);
+            item.setSourceId(coi.getId());
+
+            // lấy thông tin service item
+            if (coi.getServiceItemId() != null) {
+                ServiceItem si = serviceItemRepository.findById(coi.getServiceItemId())
+                        .orElse(null);
+                if (si != null) {
+                    item.setServiceItemId(si.getId());
+                    item.setServiceItemCode(si.getCode());
+                    item.setServiceItemName(si.getName());
+                    item.setDescription(si.getName());
+                } else {
+                    item.setDescription(group + " item #" + coi.getId());
+                }
+            } else {
+                item.setDescription(group + " item #" + coi.getId());
+            }
+
+            item.setQuantity(1); // 1 y lệnh = 1 lần thực hiện
+
+            // kiểm tra đã billing chưa
+            java.util.List<InvoiceLine> lines =
+                    invoiceLineRepository.findBySourceTypeAndSourceId(sourceType, coi.getId());
+
+            boolean billed = !lines.isEmpty();
+            item.setBilled(billed);
+            item.setInvoiceId(billed ? lines.get(0).getInvoice().getId() : null);
+
+            all.add(item);
+        }
+
+        // ===== 3. Thuốc từ prescription_item =====
+        java.util.List<Prescription> prescs =
+                prescriptionRepository.findByEncounter_Id(encounterId);
+
+        for (Prescription pr : prescs) {
+            java.util.List<PrescriptionItem> pis =
+                    prescriptionItemRepository.findByPrescription_Id(pr.getId());
+
+            for (PrescriptionItem pi : pis) {
+                ServiceUsageItem item = new ServiceUsageItem();
+                item.setGroup("DRUG");
+                item.setSourceType("DRUG");
+                item.setSourceId(pi.getId());
+
+                // lấy thông tin thuốc + service_item
+                Drug drug = drugRepository.findById(pi.getDrugId()).orElse(null);
+                if (drug != null) {
+                    item.setDescription(drug.getName());
+                    if (drug.getServiceItemId() != null) {
+                        ServiceItem si = serviceItemRepository.findById(drug.getServiceItemId())
+                                .orElse(null);
+                        if (si != null) {
+                            item.setServiceItemId(si.getId());
+                            item.setServiceItemCode(si.getCode());
+                            item.setServiceItemName(si.getName());
+                        }
+                    }
+                } else {
+                    item.setDescription("Drug item #" + pi.getId());
+                }
+
+                item.setQuantity(pi.getQuantity());
+
+                java.util.List<InvoiceLine> lines =
+                        invoiceLineRepository.findBySourceTypeAndSourceId("DRUG", pi.getId());
+
+                boolean billed = !lines.isEmpty();
+                item.setBilled(billed);
+                item.setInvoiceId(billed ? lines.get(0).getInvoice().getId() : null);
+
+                all.add(item);
+            }
+        }
+
+        res.setServices(all);
+        return res;
+    }
 }

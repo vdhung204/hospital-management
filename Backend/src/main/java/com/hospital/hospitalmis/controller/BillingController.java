@@ -1,10 +1,7 @@
 package com.hospital.hospitalmis.controller;
 
 import com.hospital.hospitalmis.dto.*;
-import com.hospital.hospitalmis.dto.invoice.AutoInvoiceRequest;
-import com.hospital.hospitalmis.dto.invoice.InvoiceCreateRequest;
-import com.hospital.hospitalmis.dto.invoice.InvoiceDetailResponse;
-import com.hospital.hospitalmis.dto.invoice.PaymentCreateRequest;
+import com.hospital.hospitalmis.dto.invoice.*;
 import com.hospital.hospitalmis.service.BillingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -64,5 +61,14 @@ public class BillingController {
         InvoiceDetailResponse dto =
                 billingService.createAutoInvoiceForEncounter(encounterId, request);
         return ResponseEntity.ok(dto);
+    }
+
+    // NEW: preview tất cả dịch vụ của 1 encounter
+    @GetMapping("/encounters/{encounterId}/billing-preview")
+    public ResponseEntity<BillingPreviewResponse> getBillingPreview(
+            @PathVariable Long encounterId
+    ) {
+        BillingPreviewResponse res = billingService.getBillingPreview(encounterId);
+        return ResponseEntity.ok(res);
     }
 }
