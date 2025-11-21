@@ -51,36 +51,18 @@ public class SecurityConfig {
                         // cho phép ai cũng xem danh mục khoa (nếu anh muốn)
                         .requestMatchers(HttpMethod.GET,"/api/departments/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/drugs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/drug-batches/**").permitAll()
+
+                        .requestMatchers("/api/drug-batches/**").hasAnyRole("ADMIN", "PHARMACIST")
 
                         // admin mới được gọi các api admin
                         .requestMatchers("/api/auth/admin/register/**").hasRole("ADMIN")
                         .requestMatchers("/api/departments/**").hasRole("ADMIN")
-                        .requestMatchers("/api/durgs/**").hasRole("ADMIN")
+                        .requestMatchers("/api/drugs/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 );
 
-
-//                .authorizeHttpRequests(auth -> auth
-//                        // ====== PUBLIC ======
-//                        .requestMatchers(
-//                                "/api/auth/login",
-//                                "/api/auth/register/patient",
-//                                "/actuator/health"
-//                        ).permitAll()
-//
-//                        // tạm thời mở full departments cho dễ test
-//                        .requestMatchers("/api/departments/**").permitAll()
-//
-//                        // tạm thời mở patients GET cho tiện test
-//                        .requestMatchers("/api/patients/**").permitAll()
-//
-//                        // admin tạo staff
-//                        .requestMatchers("/api/auth/admin/register/**").hasRole("ADMIN")
-//
-//                        // ====== CÒN LẠI CẦN AUTH ======
-//                        .anyRequest().authenticated()
-//                );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
