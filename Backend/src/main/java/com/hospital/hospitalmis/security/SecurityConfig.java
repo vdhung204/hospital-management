@@ -41,19 +41,42 @@ public class SecurityConfig {
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // mở các endpoint public
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/register/patient",
                                 "/actuator/health"
                         ).permitAll()
-                        // tạm thời mở luôn patient GET cho tiện test
-                        .requestMatchers("/api/patients/**").permitAll()
+
+                        // cho phép ai cũng xem danh mục khoa (nếu anh muốn)
+                        .requestMatchers("/api/departments/**").hasRole("ADMIN")
+
+                        // admin mới được gọi các api admin
                         .requestMatchers("/api/auth/admin/register/**").hasRole("ADMIN")
 
-                        // còn lại yêu cầu authenticated
                         .anyRequest().authenticated()
                 );
+
+
+//                .authorizeHttpRequests(auth -> auth
+//                        // ====== PUBLIC ======
+//                        .requestMatchers(
+//                                "/api/auth/login",
+//                                "/api/auth/register/patient",
+//                                "/actuator/health"
+//                        ).permitAll()
+//
+//                        // tạm thời mở full departments cho dễ test
+//                        .requestMatchers("/api/departments/**").permitAll()
+//
+//                        // tạm thời mở patients GET cho tiện test
+//                        .requestMatchers("/api/patients/**").permitAll()
+//
+//                        // admin tạo staff
+//                        .requestMatchers("/api/auth/admin/register/**").hasRole("ADMIN")
+//
+//                        // ====== CÒN LẠI CẦN AUTH ======
+//                        .anyRequest().authenticated()
+//                );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

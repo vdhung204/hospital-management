@@ -19,8 +19,9 @@ public class ServiceItem {
     @Column(name = "service_type", nullable = false, length = 50)
     private String serviceType; // CONSULT, LAB, IMG, DRUG,...
 
-    @Column(name = "department_id")
-    private Long departmentId;  // đơn giản giữ id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     // getters/setters
 
@@ -56,11 +57,11 @@ public class ServiceItem {
         this.serviceType = serviceType;
     }
 
-    public Long getDepartmentId() {
-        return departmentId;
+    public Department getDepartment() {
+        return department;
     }
 
-    public void setDepartmentId(Long departmentId) {
-        this.departmentId = departmentId;
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 }

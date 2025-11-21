@@ -31,4 +31,5 @@ public interface TariffRepository extends JpaRepository<Tariff, Long> {
             @Param("payerType") String payerType,
             @Param("today") LocalDate today
     );
+    List<Tariff> findByServiceItem_Id(Long serviceItemId);
 }
