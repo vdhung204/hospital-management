@@ -368,7 +368,7 @@ public class BillingService {
                             .orElseThrow(() -> new RuntimeException("Drug not found id=" + pi.getDrugId()));
 
                     InvoiceLineRequest lineReq = new InvoiceLineRequest();
-                    lineReq.setServiceItemId(drug.getServiceItemId());
+                    lineReq.setServiceItemId(drug.getServiceItem().getId());
                     lineReq.setQuantity(pi.getQuantity());
                     lineReq.setSourceType("DRUG");
                     lineReq.setSourceId(pi.getId());
@@ -663,8 +663,8 @@ public class BillingService {
                 Drug drug = drugRepository.findById(pi.getDrugId()).orElse(null);
                 if (drug != null) {
                     item.setDescription(drug.getName());
-                    if (drug.getServiceItemId() != null) {
-                        ServiceItem si = serviceItemRepository.findById(drug.getServiceItemId())
+                    if (drug.getServiceItem() != null) {
+                        ServiceItem si = serviceItemRepository.findById(drug.getServiceItem().getId())
                                 .orElse(null);
                         if (si != null) {
                             item.setServiceItemId(si.getId());

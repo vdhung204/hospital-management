@@ -2,6 +2,7 @@ package com.hospital.hospitalmis.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -48,10 +49,13 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // cho phép ai cũng xem danh mục khoa (nếu anh muốn)
-                        .requestMatchers("/api/departments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/api/departments/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/drugs/**").permitAll()
 
                         // admin mới được gọi các api admin
                         .requestMatchers("/api/auth/admin/register/**").hasRole("ADMIN")
+                        .requestMatchers("/api/departments/**").hasRole("ADMIN")
+                        .requestMatchers("/api/durgs/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 );
