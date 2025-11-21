@@ -2,6 +2,7 @@ package com.hospital.hospitalmis.service;
 
 import com.hospital.hospitalmis.dto.master.DrugBatchDto;
 import com.hospital.hospitalmis.dto.master.DrugBatchRequest;
+import com.hospital.hospitalmis.dto.prescribe.DrugBatchAllocationResultDto;
 
 import java.util.List;
 
@@ -18,4 +19,6 @@ public interface DrugBatchService {
     DrugBatchDto update(Long id, DrugBatchRequest request);
 
     void delete(Long id);
+
+    DrugBatchAllocationResultDto allocateBatches(Long drugId, Integer quantity);
 }

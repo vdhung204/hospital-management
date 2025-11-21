@@ -2,6 +2,8 @@ package com.hospital.hospitalmis.controller;
 
 import com.hospital.hospitalmis.dto.master.DrugBatchDto;
 import com.hospital.hospitalmis.dto.master.DrugBatchRequest;
+import com.hospital.hospitalmis.dto.prescribe.DrugBatchAllocationRequest;
+import com.hospital.hospitalmis.dto.prescribe.DrugBatchAllocationResultDto;
 import com.hospital.hospitalmis.service.DrugBatchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -60,4 +62,15 @@ public class DrugBatchController {
         drugBatchService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    // POST /api/drug-batches/allocate
+    @PostMapping("/allocate")
+    public ResponseEntity<DrugBatchAllocationResultDto> allocate(
+            @RequestBody DrugBatchAllocationRequest request
+    ) {
+        DrugBatchAllocationResultDto dto =
+                drugBatchService.allocateBatches(request.getDrugId(), request.getQuantity());
+        return ResponseEntity.ok(dto);
+    }
+
 }

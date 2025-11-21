@@ -2,6 +2,8 @@ package com.hospital.hospitalmis.service.impl;
 
 import com.hospital.hospitalmis.dto.master.DrugBatchDto;
 import com.hospital.hospitalmis.dto.master.DrugBatchRequest;
+import com.hospital.hospitalmis.dto.prescribe.DrugBatchAllocationItemDto;
+import com.hospital.hospitalmis.dto.prescribe.DrugBatchAllocationResultDto;
 import com.hospital.hospitalmis.entity.Drug;
 import com.hospital.hospitalmis.entity.DrugBatch;
 import com.hospital.hospitalmis.repository.DrugBatchRepository;
@@ -10,6 +12,8 @@ import com.hospital.hospitalmis.service.DrugBatchService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -119,4 +123,67 @@ public class DrugBatchServiceImpl implements DrugBatchService {
         // thì nên chặn xoá (RESTRICT), giờ tạm cho xoá
         drugBatchRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DrugBatchAllocationResultDto allocateBatches(Long drugId, Integer quantity) {
+
+        if (quantity == null || quantity <= 0) {
+            throw new RuntimeException("Quantity must be positive");
+        }
+
+        // Lấy thông tin thuốc
+        Drug drug = drugRepository.findById(drugId)
+                .orElseThrow(() -> new RuntimeException("Drug not found"));
+
+        // Lấy tất cả lô theo thuốc, sort theo HSD tăng dần
+        List<DrugBatch> batches = drugBatchRepository.findByDrugIdOrderByExpiryDateAsc(drugId);
+
+        LocalDate today = LocalDate.now();
+
+        int remaining = quantity;
+        int totalAllocated = 0;
+        List<DrugBatchAllocationItemDto> items = new ArrayList<>();
+
+        for (DrugBatch b : batches) {
+            // bỏ qua lô hết hạn hoặc hết hàng
+            if (b.getExpiryDate() != null && b.getExpiryDate().isBefore(today)) {
+                continue;
+            }
+            if (b.getQuantityOnHand() == null || b.getQuantityOnHand() <= 0) {
+                continue;
+            }
+
+            if (remaining <= 0) {
+                break;
+            }
+
+            int available = b.getQuantityOnHand();
+            int take = Math.min(remaining, available);
+
+            DrugBatchAllocationItemDto item = new DrugBatchAllocationItemDto();
+            item.setBatchId(b.getId());
+            item.setBatchNumber(b.getBatchNumber());
+            item.setExpiryDate(b.getExpiryDate());
+            item.setQuantityOnHand(available);
+            item.setAllocatedQuantity(take);
+
+            items.add(item);
+
+            remaining -= take;
+            totalAllocated += take;
+        }
+
+        DrugBatchAllocationResultDto result = new DrugBatchAllocationResultDto();
+        result.setDrugId(drug.getId());
+        result.setDrugCode(drug.getCode());
+        result.setDrugName(drug.getName());
+        result.setRequestedQuantity(quantity);
+        result.setTotalAllocated(totalAllocated);
+        result.setEnoughStock(totalAllocated >= quantity);
+        result.setItems(items);
+
+        return result;
+    }
+
 }
