@@ -1,9 +1,6 @@
 package com.hospital.hospitalmis.controller;
 
-import com.hospital.hospitalmis.dto.auth.LoginRequest;
-import com.hospital.hospitalmis.dto.auth.LoginResponse;
-import com.hospital.hospitalmis.dto.auth.PatientRegisterRequest;
-import com.hospital.hospitalmis.dto.auth.StaffRegisterRequest;
+import com.hospital.hospitalmis.dto.auth.*;
 import com.hospital.hospitalmis.entity.Patient;
 import com.hospital.hospitalmis.entity.UserAccount;
 import com.hospital.hospitalmis.repository.PatientRepository;
@@ -118,6 +115,15 @@ public class AuthController {
         }
 
         res.setFullName(fullName);
+        return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<CurrentUserResponse> me(Authentication authentication) {
+        // Spring Security đã parse JWT -> Authentication -> CustomUserDetails
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        CurrentUserResponse res = authService.getCurrentUserProfile(userDetails);
         return ResponseEntity.ok(res);
     }
 }

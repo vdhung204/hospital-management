@@ -1,10 +1,12 @@
 package com.hospital.hospitalmis.service;
 
+import com.hospital.hospitalmis.dto.auth.CurrentUserResponse;
 import com.hospital.hospitalmis.dto.auth.PatientRegisterRequest;
 import com.hospital.hospitalmis.dto.auth.LoginResponse;
 import com.hospital.hospitalmis.dto.auth.StaffRegisterRequest;
 import com.hospital.hospitalmis.entity.*;
 import com.hospital.hospitalmis.repository.*;
+import com.hospital.hospitalmis.security.CustomUserDetails;
 import com.hospital.hospitalmis.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -91,139 +93,139 @@ public class AuthService {
 
         return res;
     }
-//    public LoginResponse registerStaff(StaffRegisterRequest req) {
-//
-//        // 1. Check username trùng
-//        if (userAccountRepository.findByUsername(req.getUsername()).isPresent()) {
-//            throw new RuntimeException("Username already taken");
-//        }
-//
-//        // 2. Validate staffType -> roleCode
-//        String staffType = req.getStaffType();
-//        String roleCode;
-//        switch (staffType) {
-//            case "DOCTOR"  -> roleCode = "DOCTOR";
-//            case "NURSE"   -> roleCode = "NURSE";
-//            case "CASHIER" -> roleCode = "CASHIER";
-//            case "ADMIN"   -> roleCode = "ADMIN";
-//            default -> throw new RuntimeException("Invalid staffType: " + staffType);
-//        }
-//
-//        // 3. Tạo user_account
-//        UserAccount user = new UserAccount();
-//        user.setUsername(req.getUsername());
-//        user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-//        user.setIsActive(true);
-//        user.setPatientId(null);
-//
-//        Role role = roleRepository.findByCode(roleCode)
-//                .orElseThrow(() -> new RuntimeException("Role " + roleCode + " not found"));
-//        user.getRoles().add(role);
-//
-//        UserAccount savedUser = userAccountRepository.save(user);
-//
-//        // 4. Tạo staff
-//        Staff staff = new Staff();
-//        staff.setUser(savedUser);
-//        staff.setStaffCode(generateStaffCode(staffType));
-//        staff.setFullName(req.getFullName());
-//        staff.setGender(req.getGender());
-//        staff.setDateOfBirth(req.getDateOfBirth());
-//        staff.setPhone(req.getPhone());
-//        staff.setEmail(req.getEmail());
-//        staff.setIdNumber(req.getIdNumber());
-//        staff.setAddress(req.getAddress());
-//        staff.setStaffType(staffType);
-//        staff.setPosition(req.getPosition());
-//        staff.setHireDate(req.getHireDate());
-//        staff.setIsActive(true);
-//
-//        if (req.getDepartmentId() != null) {
-//            Department dept = departmentRepository.findById(req.getDepartmentId())
-//                    .orElseThrow(() -> new RuntimeException("Department not found"));
-//            staff.setDepartment(dept);
-//        }
-//
-//        Staff savedStaff = staffRepository.save(staff);
-//
-//        // 5. Tạo token + response (cho phép login luôn)
-//        List<String> roles = List.of("ROLE_" + roleCode);
-//        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getUsername(), roles);
-//
-//        LoginResponse res = new LoginResponse();
-//        res.setAccessToken(token);
-//        res.setUserId(savedUser.getId());
-//        res.setUsername(savedUser.getUsername());
-//        res.setPatientId(null);
-//        res.setRoles(roles);
-//        res.setFullName(savedStaff.getFullName());
-//
-//        return res;
-//    }
-public LoginResponse registerStaff(StaffRegisterRequest req) {
+    public LoginResponse registerStaff(StaffRegisterRequest req) {
 
-    // 1. Check username trùng
-    if (userAccountRepository.findByUsername(req.getUsername()).isPresent()) {
-        throw new RuntimeException("Username already taken");
+        // 1. Check username trùng
+        if (userAccountRepository.findByUsername(req.getUsername()).isPresent()) {
+            throw new RuntimeException("Username already taken");
+        }
+
+        // 2. Lấy role theo staffType (staffType = role.code)
+        String staffType = req.getStaffType(); // VD: "DOCTOR", "NURSE", ...
+        Role role = roleRepository.findByCode(staffType)
+                .orElseThrow(() -> new RuntimeException("Role not found: " + staffType));
+
+        // 3. Tạo user_account
+        UserAccount user = new UserAccount();
+        user.setUsername(req.getUsername());
+        user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+        user.setIsActive(true);
+        user.setPatientId(null);
+
+        // 🔴 DÒNG QUAN TRỌNG: GÁN ROLE
+        user.getRoles().add(role);
+
+        UserAccount savedUser = userAccountRepository.save(user);
+
+        // 4. Tạo staff
+        Staff staff = new Staff();
+        staff.setUser(savedUser);
+        staff.setStaffCode(generateStaffCode(staffType));
+        staff.setFullName(req.getFullName());
+        staff.setGender(req.getGender());
+        staff.setDateOfBirth(req.getDateOfBirth());
+        staff.setPhone(req.getPhone());
+        staff.setEmail(req.getEmail());
+        staff.setIdNumber(req.getIdNumber());
+        staff.setAddress(req.getAddress());
+        staff.setStaffType(staffType);
+        staff.setPosition(req.getPosition());
+        staff.setHireDate(req.getHireDate());
+        staff.setIsActive(true);
+
+        if (req.getDepartmentId() != null) {
+            Department dept = departmentRepository.findById(req.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Department not found"));
+            staff.setDepartment(dept);
+        }
+
+        Staff savedStaff = staffRepository.save(staff);
+
+        // 5. Token + response
+        String roleCode = role.getCode(); // chính là staffType
+        List<String> roles = List.of("ROLE_" + roleCode);
+        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getUsername(), roles);
+
+        LoginResponse res = new LoginResponse();
+        res.setAccessToken(token);
+        res.setUserId(savedUser.getId());
+        res.setUsername(savedUser.getUsername());
+        res.setPatientId(null);
+        res.setRoles(roles);
+        res.setFullName(savedStaff.getFullName());
+
+        return res;
     }
+    public CurrentUserResponse getCurrentUserProfile(CustomUserDetails userDetails) {
 
-    // 2. Lấy role theo staffType (staffType = role.code)
-    String staffType = req.getStaffType(); // VD: "DOCTOR", "NURSE", ...
-    Role role = roleRepository.findByCode(staffType)
-            .orElseThrow(() -> new RuntimeException("Role not found: " + staffType));
+        CurrentUserResponse res = new CurrentUserResponse();
+        res.setUserId(userDetails.getUserId());
+        res.setUsername(userDetails.getUsername());
 
-    // 3. Tạo user_account
-    UserAccount user = new UserAccount();
-    user.setUsername(req.getUsername());
-    user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-    user.setIsActive(true);
-    user.setPatientId(null);
+        // lấy list roles dạng "ROLE_XXX"
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .toList();
+        res.setRoles(roles);
 
-    // 🔴 DÒNG QUAN TRỌNG: GÁN ROLE
-    user.getRoles().add(role);
+        Long patientId = userDetails.getPatientId();
 
-    UserAccount savedUser = userAccountRepository.save(user);
+        // ==== 1. Nếu là account bệnh nhân (có patient_id) ====
+        if (patientId != null) {
+            Patient patient = patientRepository.findById(patientId)
+                    .orElse(null);
 
-    // 4. Tạo staff
-    Staff staff = new Staff();
-    staff.setUser(savedUser);
-    staff.setStaffCode(generateStaffCode(staffType));
-    staff.setFullName(req.getFullName());
-    staff.setGender(req.getGender());
-    staff.setDateOfBirth(req.getDateOfBirth());
-    staff.setPhone(req.getPhone());
-    staff.setEmail(req.getEmail());
-    staff.setIdNumber(req.getIdNumber());
-    staff.setAddress(req.getAddress());
-    staff.setStaffType(staffType);
-    staff.setPosition(req.getPosition());
-    staff.setHireDate(req.getHireDate());
-    staff.setIsActive(true);
+            if (patient != null) {
+                CurrentUserResponse.PatientInfo p = new CurrentUserResponse.PatientInfo();
+                p.setId(patient.getId());
+                p.setPatientCode(patient.getPatientCode());
+                p.setFullName(patient.getFullName());
+                p.setDateOfBirth(patient.getDateOfBirth());
+                p.setGender(patient.getGender());
+                p.setPhone(patient.getPhone());
+                p.setIdNumber(patient.getIdNumber());
+                p.setAddress(patient.getAddress());
 
-    if (req.getDepartmentId() != null) {
-        Department dept = departmentRepository.findById(req.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("Department not found"));
-        staff.setDepartment(dept);
+                res.setPatient(p);
+                res.setFullName(patient.getFullName());
+                res.setAccountType("PATIENT");
+                return res;
+            }
+        }
+
+        // ==== 2. Nếu không có patient → thử tìm staff ====
+        Staff staff = staffRepository.findByUser_Id(userDetails.getUserId())
+                .orElse(null);
+
+        if (staff != null) {
+            CurrentUserResponse.StaffInfo s = new CurrentUserResponse.StaffInfo();
+            s.setId(staff.getId());
+            s.setStaffCode(staff.getStaffCode());
+            s.setFullName(staff.getFullName());
+            s.setStaffType(staff.getStaffType());
+            s.setPosition(staff.getPosition());
+            s.setPhone(staff.getPhone());
+            s.setEmail(staff.getEmail());
+
+            Department dept = staff.getDepartment();
+            if (dept != null) {
+                s.setDepartmentId(dept.getId());
+                s.setDepartmentCode(dept.getCode());
+                s.setDepartmentName(dept.getName());
+            }
+
+            res.setStaff(s);
+            res.setFullName(staff.getFullName());
+            res.setAccountType("STAFF");
+            return res;
+        }
+
+        // ==== 3. Nếu không phải patient cũng không có staff (user kỹ thuật) ====
+        res.setFullName(userDetails.getUsername());
+        res.setAccountType("OTHER");
+
+        return res;
     }
-
-    Staff savedStaff = staffRepository.save(staff);
-
-    // 5. Token + response
-    String roleCode = role.getCode(); // chính là staffType
-    List<String> roles = List.of("ROLE_" + roleCode);
-    String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getUsername(), roles);
-
-    LoginResponse res = new LoginResponse();
-    res.setAccessToken(token);
-    res.setUserId(savedUser.getId());
-    res.setUsername(savedUser.getUsername());
-    res.setPatientId(null);
-    res.setRoles(roles);
-    res.setFullName(savedStaff.getFullName());
-
-    return res;
-}
-
 
     private String generateNewPatientCode() {
         Long maxId = patientRepository.findMaxId();   // vd: 2
