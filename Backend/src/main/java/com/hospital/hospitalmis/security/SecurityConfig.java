@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/drug-batches/**").permitAll()
 
                         .requestMatchers("/api/drug-batches/**").hasAnyRole("ADMIN", "PHARMACIST")
+                        .requestMatchers("/api/dispenses/**").hasAnyRole("ADMIN", "PHARMACIST")
 
                         // admin mới được gọi các api admin
                         .requestMatchers("/api/auth/admin/register/**").hasRole("ADMIN")

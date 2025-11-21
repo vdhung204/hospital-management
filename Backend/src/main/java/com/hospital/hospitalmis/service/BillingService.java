@@ -364,8 +364,8 @@ public class BillingService {
                             .existsBySourceTypeAndSourceId("DRUG", pi.getId());
                     if (billed) continue;
 
-                    Drug drug = drugRepository.findById(pi.getDrugId())
-                            .orElseThrow(() -> new RuntimeException("Drug not found id=" + pi.getDrugId()));
+                    Drug drug = drugRepository.findById(pi.getDrug().getId())
+                            .orElseThrow(() -> new RuntimeException("Drug not found id=" + pi.getDrug().getId()));
 
                     InvoiceLineRequest lineReq = new InvoiceLineRequest();
                     lineReq.setServiceItemId(drug.getServiceItem().getId());
@@ -660,7 +660,7 @@ public class BillingService {
                 item.setSourceId(pi.getId());
 
                 // lấy thông tin thuốc + service_item
-                Drug drug = drugRepository.findById(pi.getDrugId()).orElse(null);
+                Drug drug = drugRepository.findById(pi.getDrug().getId()).orElse(null);
                 if (drug != null) {
                     item.setDescription(drug.getName());
                     if (drug.getServiceItem() != null) {
