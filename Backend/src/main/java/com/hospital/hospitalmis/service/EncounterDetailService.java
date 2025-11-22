@@ -4,6 +4,7 @@ import com.hospital.hospitalmis.dto.*;
 import com.hospital.hospitalmis.dto.clinical_result.ImagingResultResponse;
 import com.hospital.hospitalmis.dto.clinical_result.LabResultResponse;
 import com.hospital.hospitalmis.dto.encounter.EncounterDetailResponse;
+import com.hospital.hospitalmis.dto.prescription.PrescriptionDetailDto;
 import com.hospital.hospitalmis.entity.*;
 import com.hospital.hospitalmis.repository.*;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ public class EncounterDetailService {
     private final ServiceItemRepository serviceItemRepository;
     private final LabTestRepository labTestRepository;
     private final ImagingProcedureRepository imagingProcedureRepository;
+    private final PrescriptionService prescriptionService;
+
 
     public EncounterDetailService(EncounterRepository encounterRepository,
                                   ClinicalNoteRepository clinicalNoteRepository,
@@ -34,7 +37,8 @@ public class EncounterDetailService {
                                   ImagingResultRepository imagingResultRepository,
                                   ServiceItemRepository serviceItemRepository,
                                   LabTestRepository labTestRepository,
-                                  ImagingProcedureRepository imagingProcedureRepository) {
+                                  ImagingProcedureRepository imagingProcedureRepository,
+                                  PrescriptionService prescriptionService) {
         this.encounterRepository = encounterRepository;
         this.clinicalNoteRepository = clinicalNoteRepository;
         this.encounterDiagnosisRepository = encounterDiagnosisRepository;
@@ -45,6 +49,7 @@ public class EncounterDetailService {
         this.serviceItemRepository = serviceItemRepository;
         this.labTestRepository = labTestRepository;
         this.imagingProcedureRepository = imagingProcedureRepository;
+        this.prescriptionService = prescriptionService;
     }
 
     public EncounterDetailResponse getEncounterDetail(Long encounterId) {
@@ -103,6 +108,11 @@ public class EncounterDetailService {
                 .map(this::mapOrderToBlock)
                 .collect(Collectors.toList());
         dto.setOrders(orderBlocks);
+
+        // -------- Prescriptions (đơn thuốc) ----------
+        List<PrescriptionDetailDto> presDtos =
+                prescriptionService.getByEncounter(encounterId);
+        dto.setPrescriptions(presDtos);
 
         return dto;
     }

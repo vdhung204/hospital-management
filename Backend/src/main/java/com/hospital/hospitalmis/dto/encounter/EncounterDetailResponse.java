@@ -4,6 +4,7 @@ import com.hospital.hospitalmis.dto.ClinicalNoteResponse;
 import com.hospital.hospitalmis.dto.DiagnosisResponse;
 import com.hospital.hospitalmis.dto.clinical_result.ImagingResultResponse;
 import com.hospital.hospitalmis.dto.clinical_result.LabResultResponse;
+import com.hospital.hospitalmis.dto.prescription.PrescriptionDetailDto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -128,6 +129,8 @@ public class EncounterDetailResponse {
     private java.util.List<ClinicalNoteResponse> notes;
     private java.util.List<DiagnosisResponse> diagnoses;
     private java.util.List<ClinicalOrderBlock> orders;
+    private java.util.List<PrescriptionDetailDto> prescriptions;
+
 
     // getters/setters encounter
     public Long getId() { return id; }
@@ -156,4 +159,12 @@ public class EncounterDetailResponse {
 
     public java.util.List<ClinicalOrderBlock> getOrders() { return orders; }
     public void setOrders(java.util.List<ClinicalOrderBlock> orders) { this.orders = orders; }
+
+    public List<PrescriptionDetailDto> getPrescriptions() {
+        return prescriptions;
+    }
+
+    public void setPrescriptions(List<PrescriptionDetailDto> prescriptions) {
+        this.prescriptions = prescriptions;
+    }
 }
