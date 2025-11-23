@@ -10,7 +10,6 @@ public class InvoiceCreateRequest {
     private String payerType;
     private BigDecimal discount; // tổng chiết khấu (nếu có)
     private List<InvoiceLineRequest> lines;
-    private Long insuranceCardId;
 
     public Long getPatientId() { return patientId; }
     public void setPatientId(Long patientId) { this.patientId = patientId; }
@@ -31,10 +30,4 @@ public class InvoiceCreateRequest {
 
     public List<InvoiceLineRequest> getLines() { return lines; }
     public void setLines(List<InvoiceLineRequest> lines) { this.lines = lines; }
-
-    public Long getInsuranceCardId() { return insuranceCardId; }
-
-    public void setInsuranceCardId(Long insuranceCardId) {
-        this.insuranceCardId = insuranceCardId;
-    }
 }

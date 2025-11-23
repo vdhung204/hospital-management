@@ -57,111 +57,6 @@ public class BillingService {
         this.insuranceCardRepository = insuranceCardRepository;
     }
 
-    // --------- Tạo hóa đơn mới ---------
-//    public InvoiceDetailResponse createInvoice(InvoiceCreateRequest req) {
-//        Patient patient = patientRepository.findById(req.getPatientId())
-//                .orElseThrow(() -> new RuntimeException("Patient not found"));
-//
-//        Encounter encounter = null;
-//        if (req.getEncounterId() != null) {
-//            encounter = encounterRepository.findById(req.getEncounterId())
-//                    .orElseThrow(() -> new RuntimeException("Encounter not found"));
-//        }
-//
-//        Invoice invoice = new Invoice();
-//        invoice.setPatient(patient);
-//        invoice.setEncounter(encounter);
-//        invoice.setCreatedAt(LocalDateTime.now());
-//        invoice.setStatus("DRAFT");
-//
-//        invoice.setTotalAmount(BigDecimal.ZERO);
-//        invoice.setDiscount(req.getDiscount() != null ? req.getDiscount() : BigDecimal.ZERO);
-//        invoice.setNetAmount(BigDecimal.ZERO);
-//        invoice.setTotalInsuranceAmount(BigDecimal.ZERO); // NEW
-//        invoice.setTotalPatientAmount(BigDecimal.ZERO);   // NEW
-//
-//        Invoice savedInvoice = invoiceRepository.save(invoice);
-//
-//        String payerType = (req.getPayerType() != null && !req.getPayerType().isBlank())
-//                ? req.getPayerType()
-//                : "CASH";
-//
-//        boolean isInsurance = "INSURANCE".equalsIgnoreCase(payerType)
-//                && req.getInsuranceCardId() != null;
-//
-//        InsuranceCard insuranceCard = null;
-//        BigDecimal coverageRate = BigDecimal.ZERO;
-//
-//        if (isInsurance) {
-//            insuranceCard = insuranceCardRepository.findById(req.getInsuranceCardId())
-//                    .orElseThrow(() -> new RuntimeException("Insurance card not found"));
-//
-//            //coverageRate = insuranceCard.getCoverageRate();
-//            // Nếu DB lưu 80.00 = 80% thì dùng:
-//            coverageRate = insuranceCard.getCoverageRate().divide(BigDecimal.valueOf(100));
-//        }
-//
-//        BigDecimal total = BigDecimal.ZERO;
-//        BigDecimal totalInsurance = BigDecimal.ZERO;
-//        BigDecimal totalPatient = BigDecimal.ZERO;
-//
-//        if (req.getLines() != null) {
-//            for (InvoiceLineRequest lineReq : req.getLines()) {
-//                ServiceItem serviceItem = serviceItemRepository.findById(lineReq.getServiceItemId())
-//                        .orElseThrow(() -> new RuntimeException("Service item not found"));
-//
-//                BigDecimal qty = BigDecimal.valueOf(lineReq.getQuantity());
-//                BigDecimal unitPrice = findPriceFromTariff(serviceItem.getId(), payerType);
-//                BigDecimal lineAmount = unitPrice.multiply(qty);
-//
-//                BigDecimal insuranceAmount = BigDecimal.ZERO;
-//                BigDecimal patientAmount = lineAmount;
-//
-//                if (isInsurance) {
-//                    insuranceAmount = lineAmount
-//                            .multiply(coverageRate)
-//                            .setScale(2, RoundingMode.HALF_UP);
-//                    patientAmount = lineAmount.subtract(insuranceAmount);
-//                }
-//
-//                InvoiceLine line = new InvoiceLine();
-//                line.setInvoice(savedInvoice);
-//                line.setServiceItem(serviceItem);
-//                line.setQuantity(lineReq.getQuantity());
-//                line.setUnitPrice(unitPrice);
-//                line.setLineAmount(lineAmount);
-//                line.setSourceType(lineReq.getSourceType());
-//                line.setSourceId(lineReq.getSourceId());
-//
-//                // NEW
-//                line.setInsuranceAmount(insuranceAmount);
-//                line.setPatientAmount(patientAmount);
-//                line.setAppliedCoverageRate(isInsurance ? coverageRate : null);
-//                line.setInsuranceCard(isInsurance ? insuranceCard : null);
-//
-//                invoiceLineRepository.save(line);
-//
-//                total = total.add(lineAmount);
-//                totalInsurance = totalInsurance.add(insuranceAmount);
-//                totalPatient = totalPatient.add(patientAmount);
-//            }
-//        }
-//
-//        savedInvoice.setTotalAmount(total);
-//        savedInvoice.setTotalInsuranceAmount(totalInsurance);
-//        savedInvoice.setTotalPatientAmount(totalPatient);
-//
-//        BigDecimal discount = savedInvoice.getDiscount() != null
-//                ? savedInvoice.getDiscount()
-//                : BigDecimal.ZERO;
-//
-//        // GIỮ LOGIC CŨ: net = total - discount (để không ảnh hưởng chỗ khác)
-//        savedInvoice.setNetAmount(total.subtract(discount));
-//
-//        invoiceRepository.save(savedInvoice);
-//
-//        return getInvoiceDetail(savedInvoice.getId());
-//    }
     public InvoiceDetailResponse createInvoice(InvoiceCreateRequest req) {
         Patient patient = patientRepository.findById(req.getPatientId())
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
@@ -260,8 +155,11 @@ public class BillingService {
                 ? savedInvoice.getDiscount()
                 : BigDecimal.ZERO;
 
-        // Giữ nghiệp vụ cũ: netAmount = total - discount
-        savedInvoice.setNetAmount(total.subtract(discount));
+        BigDecimal net = totalPatient.subtract(discount);
+        if (net.compareTo(BigDecimal.ZERO) < 0) {
+            net = BigDecimal.ZERO;
+        }
+        savedInvoice.setNetAmount(net);
 
         invoiceRepository.save(savedInvoice);
 
@@ -389,7 +287,6 @@ public class BillingService {
         createReq.setPayerType(payerType);
         createReq.setDiscount(java.math.BigDecimal.ZERO);
         createReq.setLines(autoLines);
-        createReq.setInsuranceCardId(req.getInsuranceCardId());
 
         return createInvoice(createReq);
     }

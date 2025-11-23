@@ -4,6 +4,7 @@ import com.hospital.hospitalmis.dto.*;
 import com.hospital.hospitalmis.dto.clinical_result.ImagingResultResponse;
 import com.hospital.hospitalmis.dto.clinical_result.LabResultResponse;
 import com.hospital.hospitalmis.dto.encounter.EncounterDetailResponse;
+import com.hospital.hospitalmis.dto.invoice.InvoiceDetailResponse;
 import com.hospital.hospitalmis.dto.prescription.PrescriptionDetailDto;
 import com.hospital.hospitalmis.entity.*;
 import com.hospital.hospitalmis.repository.*;
@@ -26,6 +27,7 @@ public class EncounterDetailService {
     private final LabTestRepository labTestRepository;
     private final ImagingProcedureRepository imagingProcedureRepository;
     private final PrescriptionService prescriptionService;
+    private final BillingService billingService;
 
 
     public EncounterDetailService(EncounterRepository encounterRepository,
@@ -38,7 +40,8 @@ public class EncounterDetailService {
                                   ServiceItemRepository serviceItemRepository,
                                   LabTestRepository labTestRepository,
                                   ImagingProcedureRepository imagingProcedureRepository,
-                                  PrescriptionService prescriptionService) {
+                                  PrescriptionService prescriptionService,
+                                  BillingService billingService) {
         this.encounterRepository = encounterRepository;
         this.clinicalNoteRepository = clinicalNoteRepository;
         this.encounterDiagnosisRepository = encounterDiagnosisRepository;
@@ -50,6 +53,7 @@ public class EncounterDetailService {
         this.labTestRepository = labTestRepository;
         this.imagingProcedureRepository = imagingProcedureRepository;
         this.prescriptionService = prescriptionService;
+        this.billingService = billingService;
     }
 
     public EncounterDetailResponse getEncounterDetail(Long encounterId) {
@@ -113,6 +117,11 @@ public class EncounterDetailService {
         List<PrescriptionDetailDto> presDtos =
                 prescriptionService.getByEncounter(encounterId);
         dto.setPrescriptions(presDtos);
+
+        // -------- Invoices + payments ----------
+        List<InvoiceDetailResponse> invoices =
+                billingService.getInvoicesByEncounter(encounterId);
+        dto.setInvoices(invoices);
 
         return dto;
     }

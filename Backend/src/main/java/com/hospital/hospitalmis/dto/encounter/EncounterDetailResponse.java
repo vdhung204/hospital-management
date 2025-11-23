@@ -4,6 +4,7 @@ import com.hospital.hospitalmis.dto.ClinicalNoteResponse;
 import com.hospital.hospitalmis.dto.DiagnosisResponse;
 import com.hospital.hospitalmis.dto.clinical_result.ImagingResultResponse;
 import com.hospital.hospitalmis.dto.clinical_result.LabResultResponse;
+import com.hospital.hospitalmis.dto.invoice.InvoiceDetailResponse;
 import com.hospital.hospitalmis.dto.prescription.PrescriptionDetailDto;
 
 import java.time.LocalDate;
@@ -130,6 +131,7 @@ public class EncounterDetailResponse {
     private java.util.List<DiagnosisResponse> diagnoses;
     private java.util.List<ClinicalOrderBlock> orders;
     private java.util.List<PrescriptionDetailDto> prescriptions;
+    private java.util.List<InvoiceDetailResponse> invoices;
 
 
     // getters/setters encounter
@@ -166,5 +168,13 @@ public class EncounterDetailResponse {
 
     public void setPrescriptions(List<PrescriptionDetailDto> prescriptions) {
         this.prescriptions = prescriptions;
+    }
+
+    public List<InvoiceDetailResponse> getInvoices() {
+        return invoices;
+    }
+
+    public void setInvoices(List<InvoiceDetailResponse> invoices) {
+        this.invoices = invoices;
     }
 }
