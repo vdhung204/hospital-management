@@ -31,6 +31,9 @@ public class StockTransaction {
     @Column(name = "reference_id")
     private Long referenceId; // vd: dispense.id
 
+    @Column(name = "details")
+    private String details ;
+
     // ===== getters / setters =====
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -52,4 +55,12 @@ public class StockTransaction {
 
     public Long getReferenceId() { return referenceId; }
     public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
+
+    public String getDetails() {
+        return details;
+    }
+
+    public void setDetails(String details) {
+        this.details = details;
+    }
 }

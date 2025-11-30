@@ -12,4 +12,6 @@ public interface DrugBatchRepository extends JpaRepository<DrugBatch, Long> {
 
     // (option) kiểm tra trùng số lô cho 1 thuốc
     boolean existsByDrugIdAndBatchNumber(Long drugId, String batchNumber);
+
+    List<DrugBatch> findByDrugIdAndBatchNumber(Long drugId, String batchNumber);
 }

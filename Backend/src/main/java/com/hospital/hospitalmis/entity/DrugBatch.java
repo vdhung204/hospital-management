@@ -25,6 +25,9 @@ public class DrugBatch {
     @Column(name = "quantity_on_hand", nullable = false)
     private Integer quantityOnHand;
 
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
     // ===== getters / setters =====
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -40,4 +43,12 @@ public class DrugBatch {
 
     public Integer getQuantityOnHand() { return quantityOnHand; }
     public void setQuantityOnHand(Integer quantityOnHand) { this.quantityOnHand = quantityOnHand; }
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean deleted) {
+        isDeleted = deleted;
+    }
 }
