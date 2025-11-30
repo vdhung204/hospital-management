@@ -88,4 +88,9 @@ public class EncounterController {
         return ResponseEntity.ok(dto);
     }
 
+    @DeleteMapping("/encounters/{id}")
+    public ResponseEntity<Void> deleteEncounter(@PathVariable Long id) {
+        encounterService.deleteEncounter(id); // Hàm này ta vừa thêm bên Service
+        return ResponseEntity.noContent().build();
+    }
 }

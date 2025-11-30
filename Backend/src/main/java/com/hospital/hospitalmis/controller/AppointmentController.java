@@ -45,10 +45,8 @@ public class AppointmentController {
             @RequestParam(required = false) Long patientId,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long doctorId,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             @RequestParam(required = false) String status
     ) {
         List<AppointmentListItem> result = appointmentService.search(

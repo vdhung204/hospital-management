@@ -7,7 +7,9 @@ import com.hospital.hospitalmis.repository.EncounterRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,44 +23,97 @@ public class EncounterService {
     private final EncounterDiagnosisRepository encounterDiagnosisRepository;
     private final ClinicalNoteRepository clinicalNoteRepository;
     private final ICD10CodeRepository icd10CodeRepository;
+    private final AppointmentRepository appointmentRepository;
 
     public EncounterService(EncounterRepository encounterRepository,
                             PatientRepository patientRepository,
                             DepartmentRepository departmentRepository,
                             EncounterDiagnosisRepository encounterDiagnosisRepository,
                             ClinicalNoteRepository clinicalNoteRepository,
-                            ICD10CodeRepository icd10CodeRepository) {
+                            ICD10CodeRepository icd10CodeRepository,
+                            AppointmentRepository appointmentRepository) {
         this.encounterRepository = encounterRepository;
         this.patientRepository = patientRepository;
         this.departmentRepository = departmentRepository;
         this.encounterDiagnosisRepository = encounterDiagnosisRepository;
         this.clinicalNoteRepository = clinicalNoteRepository;
         this.icd10CodeRepository = icd10CodeRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     // Tạo lượt khám mới
+//    public EncounterResponse createEncounter(EncounterCreateRequest req) {
+//        Patient patient = patientRepository.findById(req.getPatientId())
+//                .orElseThrow(() -> new RuntimeException("Patient not found"));
+//
+//        Department department = null;
+//        if (req.getDepartmentId() != null) {
+//            department = departmentRepository.findById(req.getDepartmentId())
+//                    .orElseThrow(() -> new RuntimeException("Department not found"));
+//        }
+//
+//        Encounter enc = new Encounter();
+//        enc.setPatient(patient);
+//        enc.setDepartment(department);
+//        enc.setDoctorId(req.getDoctorId());
+//        enc.setEncounterType(req.getEncounterType());
+//        enc.setVisitDate(req.getVisitDate());
+//        enc.setStatus(req.getStatus());
+//
+//        Encounter saved = encounterRepository.save(enc);
+//        return mapToResponse(saved);
+//    }
     public EncounterResponse createEncounter(EncounterCreateRequest req) {
-        Patient patient = patientRepository.findById(req.getPatientId())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+        // 1. Validate Patient and department
+        Patient patient = patientRepository.findByIdAndIsDeletedFalse(req.getPatientId())
+                .orElseThrow(() -> new RuntimeException("Patient not found or deleted"));
+        Department department = departmentRepository.findByIdAndIsDeletedFalse(req.getDepartmentId())
+                .orElseThrow(() -> new RuntimeException("Department not found or deleted"));
+        // 2. Xử lý hàng đợi (Queue Number)
+        // Logic: Lấy số lớn nhất trong ngày của khoa đó + 1
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+        Integer maxQ = encounterRepository.findMaxQueueNumber(req.getDepartmentId(), startOfDay, endOfDay);
+        int nextQueue = (maxQ == null) ? 1 : maxQ + 1;
 
-        Department department = null;
-        if (req.getDepartmentId() != null) {
-            department = departmentRepository.findById(req.getDepartmentId())
-                    .orElseThrow(() -> new RuntimeException("Department not found"));
+        // 3. Xử lý liên kết Appointment (nếu có)
+        Appointment appt = null;
+        if (req.getAppointmentId() != null) {
+            appt = appointmentRepository.findById(req.getAppointmentId())
+                    .orElseThrow(() -> new RuntimeException("Appointment not found"));
+            // Cập nhật trạng thái lịch hẹn thành DONE (đã đến khám)
+            appt.setStatus("DONE");
+            appointmentRepository.save(appt);
         }
-
+        // Tạo Entity
         Encounter enc = new Encounter();
         enc.setPatient(patient);
-        enc.setDepartment(department);
+        enc.setDepartment(department); // lấy từ repo
         enc.setDoctorId(req.getDoctorId());
-        enc.setEncounterType(req.getEncounterType());
-        enc.setVisitDate(req.getVisitDate());
-        enc.setStatus(req.getStatus());
+        enc.setVisitDate(LocalDateTime.now());
+        enc.setStatus("WAITING"); // Mặc định là Chờ khám
+
+        // Gán các trường mới
+        enc.setIsDeleted(false);
+        enc.setQueueNumber(nextQueue);
+        enc.setAppointment(appt);
+        enc.setHeight(req.getHeight());
+        enc.setWeight(req.getWeight());
+        enc.setTemperature(req.getTemperature());
+        enc.setBloodPressure(req.getBloodPressure());
+        enc.setPulse(req.getPulse());
 
         Encounter saved = encounterRepository.save(enc);
         return mapToResponse(saved);
     }
 
+    // Hàm Soft Delete
+    public void deleteEncounter(Long id) {
+        Encounter enc = encounterRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+        enc.setIsDeleted(true); // Đánh dấu xóa
+        encounterRepository.save(enc);
+    }
     // Lấy chi tiết 1 Encounter
     public EncounterResponse getEncounter(Long id) {
         Encounter enc = encounterRepository.findById(id)

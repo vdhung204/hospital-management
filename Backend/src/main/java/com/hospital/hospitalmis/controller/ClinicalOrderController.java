@@ -82,4 +82,18 @@ public class ClinicalOrderController {
         return ResponseEntity.ok(list);
     }
 
+    // NEW: Lấy danh sách chờ Xét nghiệm (cho KTV Lab)
+    // GET /api/clinical-orders/pending-labs
+    @GetMapping("/clinical-orders/pending-labs")
+    public ResponseEntity<List<com.hospital.hospitalmis.dto.clinical_result.ClinicalOrderItemResponse>> getPendingLabs() {
+        return ResponseEntity.ok(clinicalOrderService.getPendingLabTests());
+    }
+
+    // NEW: Lấy danh sách chờ CĐHA (cho KTV X-Quang)
+    // GET /api/clinical-orders/pending-imaging
+    @GetMapping("/clinical-orders/pending-imaging")
+    public ResponseEntity<List<com.hospital.hospitalmis.dto.clinical_result.ClinicalOrderItemResponse>> getPendingImaging() {
+        return ResponseEntity.ok(clinicalOrderService.getPendingImaging());
+    }
+
 }

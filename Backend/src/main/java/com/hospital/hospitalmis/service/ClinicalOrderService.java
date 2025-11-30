@@ -226,5 +226,17 @@ public class ClinicalOrderService {
         dto.setViewerUrl(ir.getViewerUrl());
         return dto;
     }
+    public List<ClinicalOrderItemResponse> getPendingLabTests() {
+        return clinicalOrderItemRepository.findPendingItems("LAB_TEST")
+                .stream()
+                .map(this::mapOrderItemToResponse) // Dùng lại hàm map cũ
+                .collect(Collectors.toList());
+    }
 
+    public List<ClinicalOrderItemResponse> getPendingImaging() {
+        return clinicalOrderItemRepository.findPendingItems("IMG_PROC")
+                .stream()
+                .map(this::mapOrderItemToResponse)
+                .collect(Collectors.toList());
+    }
 }
