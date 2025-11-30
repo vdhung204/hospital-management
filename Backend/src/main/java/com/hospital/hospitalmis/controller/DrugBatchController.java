@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/drug-batches")
-@CrossOrigin(origins = "*")
 public class DrugBatchController {
 
     private final DrugBatchService drugBatchService;

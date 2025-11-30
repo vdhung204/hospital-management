@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/service-items")
-@CrossOrigin(origins = "*")
 public class ServiceItemController {
 
     private final ServiceItemService serviceItemService;
