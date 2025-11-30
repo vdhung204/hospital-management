@@ -47,6 +47,11 @@ public class SecurityConfig {
                                 "/api/auth/register/patient",
                                 "/actuator/health"
                         ).permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
 
                         // cho phép ai cũng xem danh mục khoa (nếu anh muốn)
                         .requestMatchers(HttpMethod.GET,"/api/departments/**").permitAll()

@@ -23,4 +23,9 @@ public interface EncounterRepository extends JpaRepository<Encounter, Long> {
     List<Encounter> findByIsDeletedFalse();
     // Lấy lịch sử khám theo bệnh nhân
     List<Encounter> findByPatient_Id(Long patientId);
+
+    // Đếm số ca khám trong ngày
+    @Query("SELECT COUNT(e) FROM Encounter e " +
+            "WHERE e.visitDate BETWEEN :start AND :end AND e.isDeleted = false")
+    Long countEncounters(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
