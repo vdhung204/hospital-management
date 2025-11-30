@@ -81,6 +81,9 @@ public class EncounterService {
         if (req.getAppointmentId() != null) {
             appt = appointmentRepository.findById(req.getAppointmentId())
                     .orElseThrow(() -> new RuntimeException("Appointment not found"));
+            if(!appt.getPatient().getId().equals(patient.getId())) {
+                throw new RuntimeException("Incorrect patient id");
+            }
             // Cập nhật trạng thái lịch hẹn thành DONE (đã đến khám)
             appt.setStatus("DONE");
             appointmentRepository.save(appt);
@@ -90,6 +93,7 @@ public class EncounterService {
         enc.setPatient(patient);
         enc.setDepartment(department); // lấy từ repo
         enc.setDoctorId(req.getDoctorId());
+        enc.setEncounterType(req.getEncounterType());
         enc.setVisitDate(LocalDateTime.now());
         enc.setStatus("WAITING"); // Mặc định là Chờ khám
 
@@ -149,6 +153,9 @@ public class EncounterService {
         dto.setEncounterType(enc.getEncounterType());
         dto.setVisitDate(enc.getVisitDate());
         dto.setStatus(enc.getStatus());
+        dto.setHeight(enc.getHeight());
+        dto.setWeight(enc.getWeight());
+        dto.setQueueNumber(enc.getQueueNumber());
 
         return dto;
     }
