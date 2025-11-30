@@ -23,6 +23,12 @@ public class ServiceItem {
     @JoinColumn(name = "department_id")
     private Department department;
 
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    public Boolean getIsDeleted() { return isDeleted; }
+    public void setIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
     // getters/setters
 
     public Long getId() {

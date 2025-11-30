@@ -32,6 +32,12 @@ public class Patient {
     @Column(name = "address", length = 255)
     private String address;
 
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    public Boolean getIsDeleted() { return isDeleted; }
+    public void setIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
+
     // getters/setters (anh có Lombok thì thay bằng @Data cũng được)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

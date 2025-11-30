@@ -31,6 +31,12 @@ public class Drug {
     @JoinColumn(name = "service_item_id", nullable = false)
     private ServiceItem serviceItem;
 
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    public Boolean getIsDeleted() { return isDeleted; }
+    public void setIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
+
     // ===== getters / setters =====
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

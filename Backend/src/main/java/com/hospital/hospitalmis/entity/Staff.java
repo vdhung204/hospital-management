@@ -56,6 +56,11 @@ public class Staff {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    public Boolean getIsDeleted() { return isDeleted; }
+    public void setIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
     // ===== getters / setters =====
 
     public Long getId() { return id; }

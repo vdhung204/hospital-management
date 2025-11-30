@@ -34,6 +34,25 @@ public class Encounter {
     @Column(name = "status", length = 20)
     private String status;          // OPEN, COMPLETED,...
 
+    @Column(name = "queue_number")
+    private Integer queueNumber;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    // Sinh hiệu
+    private Double height;
+    private Double weight;
+    private Double temperature;
+
+    @Column(name = "blood_pressure")
+    private String bloodPressure;
+    private Integer pulse;
+
+    // Link với Appointment
+    @OneToOne
+    @JoinColumn(name = "appointment_id")
+    private Appointment appointment;
     // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -55,4 +74,69 @@ public class Encounter {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public Integer getQueueNumber() {
+        return queueNumber;
+    }
+
+    public void setQueueNumber(Integer queueNumber) {
+        this.queueNumber = queueNumber;
+    }
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public Double getHeight() {
+        return height;
+    }
+
+    public void setHeight(Double height) {
+        this.height = height;
+    }
+
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
+    }
+
+    public String getBloodPressure() {
+        return bloodPressure;
+    }
+
+    public void setBloodPressure(String bloodPressure) {
+        this.bloodPressure = bloodPressure;
+    }
+
+    public Integer getPulse() {
+        return pulse;
+    }
+
+    public void setPulse(Integer pulse) {
+        this.pulse = pulse;
+    }
+
+    public Appointment getAppointment() {
+        return appointment;
+    }
+
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
+    }
+
 }

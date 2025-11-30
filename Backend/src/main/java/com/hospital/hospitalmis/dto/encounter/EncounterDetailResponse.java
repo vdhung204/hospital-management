@@ -19,6 +19,10 @@ public class EncounterDetailResponse {
     private LocalDateTime visitDate;
     private String status;
 
+    private Integer queueNumber; // Hiển thị số thứ tự
+    private Double height;
+    private Double weight;
+
     // Thông tin bệnh nhân
     public static class PatientSummary {
         private Long id;
@@ -176,5 +180,29 @@ public class EncounterDetailResponse {
 
     public void setInvoices(List<InvoiceDetailResponse> invoices) {
         this.invoices = invoices;
+    }
+
+    public Integer getQueueNumber() {
+        return queueNumber;
+    }
+
+    public void setQueueNumber(Integer queueNumber) {
+        this.queueNumber = queueNumber;
+    }
+
+    public Double getHeight() {
+        return height;
+    }
+
+    public void setHeight(Double height) {
+        this.height = height;
+    }
+
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
     }
 }
