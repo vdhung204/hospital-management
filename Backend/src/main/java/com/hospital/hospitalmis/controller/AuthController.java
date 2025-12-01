@@ -1,6 +1,7 @@
 package com.hospital.hospitalmis.controller;
 
 import com.hospital.hospitalmis.dto.auth.*;
+import com.hospital.hospitalmis.dto.exception.AppException;
 import com.hospital.hospitalmis.entity.Patient;
 import com.hospital.hospitalmis.entity.UserAccount;
 import com.hospital.hospitalmis.repository.PatientRepository;
@@ -9,6 +10,7 @@ import com.hospital.hospitalmis.repository.UserAccountRepository;
 import com.hospital.hospitalmis.security.CustomUserDetails;
 import com.hospital.hospitalmis.security.JwtUtil;
 import com.hospital.hospitalmis.service.AuthService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -68,53 +70,59 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
-        );
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+        try{
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
+            );
 
-        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+            CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
 
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority) // "ROLE_DOCTOR"
-                .collect(Collectors.toList());
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority) // "ROLE_DOCTOR"
+                    .collect(Collectors.toList());
 
-        String token = jwtUtil.generateToken(
-                userDetails.getUserId(),
-                userDetails.getUsername(),
-                roles
-        );
+            String token = jwtUtil.generateToken(
+                    userDetails.getUserId(),
+                    userDetails.getUsername(),
+                    roles
+            );
 
-        LoginResponse res = new LoginResponse();
-        res.setAccessToken(token);
-        res.setUserId(userDetails.getUserId());
-        res.setUsername(userDetails.getUsername());
-        res.setPatientId(userDetails.getPatientId());
-        res.setRoles(roles);
-        String fullName = null;
+            LoginResponse res = new LoginResponse();
+            res.setAccessToken(token);
+            res.setUserId(userDetails.getUserId());
+            res.setUsername(userDetails.getUsername());
+            res.setPatientId(userDetails.getPatientId());
+            res.setRoles(roles);
+            String fullName = null;
 
-        // 1. Nếu là tài khoản cổng bệnh nhân → lấy tên từ bảng patient
-        Long patientId = userDetails.getPatientId();
-        if (patientId != null) {
-            fullName = patientRepository.findById(patientId)
-                    .map(Patient::getFullName)
-                    .orElse(null);
+            // 1. Nếu là tài khoản cổng bệnh nhân → lấy tên từ bảng patient
+            Long patientId = userDetails.getPatientId();
+            if (patientId != null) {
+                fullName = patientRepository.findById(patientId)
+                        .map(Patient::getFullName)
+                        .orElse(null);
+            }
+
+            // 2. Nếu không phải patient portal → thử tìm trong staff
+            if (fullName == null) {
+                fullName = staffRepository.findByUser_Id(userDetails.getUserId())
+                        .map(staff -> staff.getFullName())
+                        .orElse(null);
+            }
+
+            // 3. Nếu vẫn null (user kỹ thuật, chưa gắn staff/patient) → fallback username
+            if (fullName == null) {
+                fullName = userDetails.getUsername();
+            }
+
+            res.setFullName(fullName);
+            return ResponseEntity.ok(res);
+        }catch (BadCredentialsException ex) {
+            throw new AppException(401, "Tên đăng nhập hoặc mật khẩu không chính xác");
+        } catch (Exception ex) {
+            throw new AppException(500, "Lỗi hệ thống: " + ex.getMessage());
         }
-
-        // 2. Nếu không phải patient portal → thử tìm trong staff
-        if (fullName == null) {
-            fullName = staffRepository.findByUser_Id(userDetails.getUserId())
-                    .map(staff -> staff.getFullName())
-                    .orElse(null);
-        }
-
-        // 3. Nếu vẫn null (user kỹ thuật, chưa gắn staff/patient) → fallback username
-        if (fullName == null) {
-            fullName = userDetails.getUsername();
-        }
-
-        res.setFullName(fullName);
-        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/me")

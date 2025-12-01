@@ -4,6 +4,7 @@ import com.hospital.hospitalmis.dto.auth.CurrentUserResponse;
 import com.hospital.hospitalmis.dto.auth.PatientRegisterRequest;
 import com.hospital.hospitalmis.dto.auth.LoginResponse;
 import com.hospital.hospitalmis.dto.auth.StaffRegisterRequest;
+import com.hospital.hospitalmis.dto.exception.AppException;
 import com.hospital.hospitalmis.entity.*;
 import com.hospital.hospitalmis.repository.*;
 import com.hospital.hospitalmis.security.CustomUserDetails;
@@ -45,7 +46,7 @@ public class AuthService {
 
         // 1. Check username
         if (userAccountRepository.findByUsername(req.getUsername()).isPresent()) {
-            throw new RuntimeException("Username already taken");
+            throw new AppException(401, "Username already taken");
         }
 
         // 2. Sinh patient_code TRƯỚC
