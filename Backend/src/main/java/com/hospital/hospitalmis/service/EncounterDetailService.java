@@ -10,6 +10,7 @@ import com.hospital.hospitalmis.entity.*;
 import com.hospital.hospitalmis.repository.*;
 import org.springframework.stereotype.Service;
 
+import java.io.Console;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,8 @@ public class EncounterDetailService {
     private final ImagingProcedureRepository imagingProcedureRepository;
     private final PrescriptionService prescriptionService;
     private final BillingService billingService;
+    private final StaffService staffService;
+    private final StaffRepository staffRepository;
 
 
     public EncounterDetailService(EncounterRepository encounterRepository,
@@ -41,7 +44,8 @@ public class EncounterDetailService {
                                   LabTestRepository labTestRepository,
                                   ImagingProcedureRepository imagingProcedureRepository,
                                   PrescriptionService prescriptionService,
-                                  BillingService billingService) {
+                                  BillingService billingService,
+                                  StaffService staffService, StaffRepository staffRepository) {
         this.encounterRepository = encounterRepository;
         this.clinicalNoteRepository = clinicalNoteRepository;
         this.encounterDiagnosisRepository = encounterDiagnosisRepository;
@@ -54,6 +58,8 @@ public class EncounterDetailService {
         this.imagingProcedureRepository = imagingProcedureRepository;
         this.prescriptionService = prescriptionService;
         this.billingService = billingService;
+        this.staffService = staffService;
+        this.staffRepository = staffRepository;
     }
 
     public EncounterDetailResponse getEncounterDetail(Long encounterId) {
@@ -66,6 +72,12 @@ public class EncounterDetailService {
         dto.setVisitDate(enc.getVisitDate());
         dto.setStatus(enc.getStatus());
         dto.setDoctorId(enc.getDoctorId());
+        dto.setQueueNumber(enc.getQueueNumber());
+        dto.setHeight(enc.getHeight());
+        dto.setWeight(enc.getWeight());
+        dto.setBloodPressure(enc.getBloodPressure());
+        dto.setTemperature(enc.getTemperature());
+        dto.setPulse(enc.getPulse());
 
         // -------- Patient summary ----------
         if (enc.getPatient() != null) {
@@ -129,12 +141,16 @@ public class EncounterDetailService {
     // ============= Mapping helpers =============
 
     private ClinicalNoteResponse mapNoteToResponse(ClinicalNote n) {
+        Staff createByName = staffRepository.findByUser_Id(n.getCreatedBy()).orElse(null);
         ClinicalNoteResponse dto = new ClinicalNoteResponse();
         dto.setId(n.getId());
         dto.setEncounterId(n.getEncounter().getId());
         dto.setNoteType(n.getNoteType());
         dto.setContent(n.getContent());
         dto.setCreatedBy(n.getCreatedBy());
+        if (createByName != null) {
+            dto.setCreatedByName(createByName.getFullName());
+        }
         dto.setCreatedAt(n.getCreatedAt());
         return dto;
     }

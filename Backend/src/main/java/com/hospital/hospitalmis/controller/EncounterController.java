@@ -86,7 +86,15 @@ public class EncounterController {
         EncounterDetailResponse dto = encounterDetailService.getEncounterDetail(id);
         return ResponseEntity.ok(dto);
     }
-
+    // PUT /api/encounters/{id}/status?status=IN_PROGRESS
+    @PutMapping("/encounters/{id}/status")
+    public ResponseEntity<Void> updateStatus(
+            @PathVariable Long id,
+            @RequestParam String status
+    ) {
+        encounterService.updateStatus(id, status);
+        return ResponseEntity.ok().build();
+    }
     @DeleteMapping("/encounters/{id}")
     public ResponseEntity<Void> deleteEncounter(@PathVariable Long id) {
         encounterService.deleteEncounter(id); // Hàm này ta vừa thêm bên Service

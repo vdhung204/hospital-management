@@ -95,7 +95,7 @@ public class AuthController {
             res.setPatientId(userDetails.getPatientId());
             res.setRoles(roles);
             String fullName = null;
-
+            Long staffId = null;
             // 1. Nếu là tài khoản cổng bệnh nhân → lấy tên từ bảng patient
             Long patientId = userDetails.getPatientId();
             if (patientId != null) {
@@ -109,6 +109,9 @@ public class AuthController {
                 fullName = staffRepository.findByUser_Id(userDetails.getUserId())
                         .map(staff -> staff.getFullName())
                         .orElse(null);
+                staffId = staffRepository.findByUser_Id(userDetails.getUserId())
+                        .map(staff -> staff.getId())
+                        .orElse(null);
             }
 
             // 3. Nếu vẫn null (user kỹ thuật, chưa gắn staff/patient) → fallback username
@@ -117,6 +120,7 @@ public class AuthController {
             }
 
             res.setFullName(fullName);
+            res.setStaffId(staffId);
             return ResponseEntity.ok(res);
         }catch (BadCredentialsException ex) {
             throw new AppException(401, "Tên đăng nhập hoặc mật khẩu không chính xác");

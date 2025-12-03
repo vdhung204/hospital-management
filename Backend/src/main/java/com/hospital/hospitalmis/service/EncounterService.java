@@ -7,6 +7,7 @@ import com.hospital.hospitalmis.repository.EncounterRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Console;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -41,28 +42,6 @@ public class EncounterService {
         this.appointmentRepository = appointmentRepository;
     }
 
-    // Tạo lượt khám mới
-//    public EncounterResponse createEncounter(EncounterCreateRequest req) {
-//        Patient patient = patientRepository.findById(req.getPatientId())
-//                .orElseThrow(() -> new RuntimeException("Patient not found"));
-//
-//        Department department = null;
-//        if (req.getDepartmentId() != null) {
-//            department = departmentRepository.findById(req.getDepartmentId())
-//                    .orElseThrow(() -> new RuntimeException("Department not found"));
-//        }
-//
-//        Encounter enc = new Encounter();
-//        enc.setPatient(patient);
-//        enc.setDepartment(department);
-//        enc.setDoctorId(req.getDoctorId());
-//        enc.setEncounterType(req.getEncounterType());
-//        enc.setVisitDate(req.getVisitDate());
-//        enc.setStatus(req.getStatus());
-//
-//        Encounter saved = encounterRepository.save(enc);
-//        return mapToResponse(saved);
-//    }
     public EncounterResponse createEncounter(EncounterCreateRequest req) {
         // 1. Validate Patient and department
         Patient patient = patientRepository.findByIdAndIsDeletedFalse(req.getPatientId())
@@ -110,7 +89,12 @@ public class EncounterService {
         Encounter saved = encounterRepository.save(enc);
         return mapToResponse(saved);
     }
-
+    public void updateStatus(Long id, String newStatus) {
+        Encounter enc = encounterRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Encounter not found"));
+        enc.setStatus(newStatus);
+        encounterRepository.save(enc);
+    }
     // Hàm Soft Delete
     public void deleteEncounter(Long id) {
         Encounter enc = encounterRepository.findById(id)
@@ -205,7 +189,7 @@ public class EncounterService {
 
         ICD10Code icd = icd10CodeRepository.findById(req.getIcd10Code())
                 .orElseThrow(() -> new RuntimeException("ICD10 code not found"));
-
+        System.out.println("hehe");
         EncounterDiagnosis diag = new EncounterDiagnosis();
         diag.setEncounter(enc);
         diag.setIcd10Code(icd);
@@ -214,6 +198,35 @@ public class EncounterService {
         EncounterDiagnosis saved = encounterDiagnosisRepository.save(diag);
         return mapDiagToResponse(saved);
     }
+    // create diagnosis (Lưu từng cái một theo ý bạn)
+//    public DiagnosisResponse addDiagnosis(Long encounterId, DiagnosisRequest req) {
+//        // 1. Kiểm tra đầu vào
+//        if (req.getIcd10Code() == null || req.getIcd10Code().trim().isEmpty()) {
+//            throw new RuntimeException("Mã ICD-10 không được để trống");
+//        }
+//
+//        // 2. Tìm Encounter
+//        Encounter enc = encounterRepository.findById(encounterId)
+//                .orElseThrow(() -> new RuntimeException("Encounter not found id=" + encounterId));
+//
+//        // 3. Tìm ICD10 (QUAN TRỌNG: Thêm .trim() để cắt khoảng trắng thừa)
+//        String cleanCode = req.getIcd10Code().trim();
+//        ICD10Code icd = icd10CodeRepository.findById(cleanCode)
+//                .orElseThrow(() -> new RuntimeException("Mã ICD-10 không tồn tại trong danh mục: " + cleanCode));
+//
+//        System.out.println(">>> Đã tìm thấy ICD: " + icd.getName()); // Debug log
+//
+//        // 4. Tạo Object
+//        EncounterDiagnosis diag = new EncounterDiagnosis();
+//        diag.setEncounter(enc);
+//        diag.setIcd10Code(icd);
+//        diag.setIsPrimary(req.getPrimary() != null ? req.getPrimary() : false);
+//
+//        // 5. Lưu (Dùng saveAndFlush để ép lưu ngay lập tức, bắt lỗi DB nếu có)
+//        EncounterDiagnosis saved = encounterDiagnosisRepository.saveAndFlush(diag);
+//
+//        return mapDiagToResponse(saved);
+//    }
 
     public List<DiagnosisResponse> getDiagnosesByEncounter(Long encounterId) {
         return encounterDiagnosisRepository.findByEncounter_Id(encounterId).stream()

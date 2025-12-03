@@ -12,6 +12,7 @@ public class LoginResponse {
     private String fullName;
     private Long patientId;
     private List<String> roles;
+    private Long staffId;
 
     // getters/setters
     public String getAccessToken() { return accessToken; }
@@ -34,4 +35,12 @@ public class LoginResponse {
 
     public List<String> getRoles() { return roles; }
     public void setRoles(List<String> roles) { this.roles = roles; }
+
+    public Long getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(Long staffId) {
+        this.staffId = staffId;
+    }
 }

@@ -113,7 +113,6 @@ public class AuthService {
         user.setIsActive(true);
         user.setPatientId(null);
 
-        // 🔴 DÒNG QUAN TRỌNG: GÁN ROLE
         user.getRoles().add(role);
 
         UserAccount savedUser = userAccountRepository.save(user);
@@ -253,6 +252,4 @@ public class AuthService {
 
         return String.format("%s%04d", prefix, next); // ví dụ D0001, N0002, A0003, ...
     }
-
-
 }

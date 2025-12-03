@@ -19,9 +19,12 @@ public class EncounterDetailResponse {
     private LocalDateTime visitDate;
     private String status;
 
+    private Double temperature;
+    private String bloodPressure;
     private Integer queueNumber; // Hiển thị số thứ tự
     private Double height;
     private Double weight;
+    private int pulse;
 
     // Thông tin bệnh nhân
     public static class PatientSummary {
@@ -204,5 +207,29 @@ public class EncounterDetailResponse {
 
     public void setWeight(Double weight) {
         this.weight = weight;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
+    }
+
+    public String getBloodPressure() {
+        return bloodPressure;
+    }
+
+    public void setBloodPressure(String bloodPressure) {
+        this.bloodPressure = bloodPressure;
+    }
+
+    public int getPulse() {
+        return pulse;
+    }
+
+    public void setPulse(int pulse) {
+        this.pulse = pulse;
     }
 }
