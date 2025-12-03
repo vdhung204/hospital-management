@@ -1,9 +1,9 @@
-// src/pages/LoginPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginApi } from '@/services/authService';
-import { toast } from 'react-toastify'; // Import toast nếu cài
+import { toast } from 'react-toastify';
 import { AxiosError } from 'axios';
+import logo from '@/assets/images/Logo.png';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -38,24 +38,17 @@ const LoginPage = () => {
     console.error(error);
 
     if (error instanceof AxiosError) {
-        // 1. Lỗi do Server trả về (VD: 400 Bad Request, 401 Unauthorized, 500 Internal Server Error)
-        // Lúc này error.response CÓ dữ liệu
         if (error.response) {
-            // Lấy message từ Backend trả về (như bạn đã làm)
             const message = error.response.data?.message || 'Lỗi xác thực!';
             toast.error(message);
         } 
-        // 2. Lỗi không nhận được phản hồi (Network Error, Server Down, CORS)
-        // Lúc này error.request có, nhưng error.response thì KHÔNG
         else if (error.request) {
             toast.error('Không thể kết nối đến Server. Vui lòng kiểm tra đường truyền!');
         } 
-        // 3. Lỗi khi setup request (ít gặp)
         else {
             toast.error('Lỗi gửi yêu cầu đăng nhập!');
         }
     } else {
-        // Lỗi logic code JS (VD: biến undefined...)
         toast.error('Đã xảy ra lỗi không xác định.');
     }
     } finally {
@@ -64,21 +57,29 @@ const LoginPage = () => {
   };
 
  return (
-    // 1. Nền Gradient đẹp mắt
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-100 via-white to-primary-50 p-4">
+    // 1. Nền Gradient
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
       
-      {/* 2. Form dùng hiệu ứng animation slide-up và đổ bóng */}
+      {/* 2. Form container */}
       <div className="w-full max-w-md animate-slide-up rounded-2xl bg-white p-8 shadow-2xl ring-1 ring-gray-100">
         
+        {/* --- LOGO AREA --- */}
         <div className="mb-8 text-center">
-          {/* Logo giả lập */}
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 6v12m-6-6h12"/></svg>
+          {/* Container cho ảnh để căn giữa tuyệt đối */}
+          <div className="flex justify-center mb-4">
+             <img 
+                src={logo} 
+                alt="Hospital Logo" 
+                // Class Tailwind: Kích thước to (h-28), giữ tỷ lệ (object-contain), bóng đổ (drop-shadow)
+                className="h-20 w-20 object-contain drop-shadow-sm transition-transform duration-300 hover:scale-105"
+             />
           </div>
-          <h2 className="text-3xl font-bold text-gray-800">Hospital MIS</h2>
+          
+          <h2 className="text-3xl font-bold text-gray-800 tracking-tight">Hospital MIS</h2>
           <p className="mt-2 text-sm text-gray-500">Đăng nhập để truy cập hệ thống</p>
         </div>
         
+        {/* --- FORM AREA --- */}
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label className="mb-1 block text-sm font-semibold text-gray-700">
@@ -86,7 +87,7 @@ const LoginPage = () => {
             </label>
             <input
               type="text"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               placeholder="admin"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -100,7 +101,7 @@ const LoginPage = () => {
             </label>
             <input
               type="password"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               placeholder="••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -108,11 +109,10 @@ const LoginPage = () => {
             />
           </div>
 
-          {/* 3. Button dùng màu Primary và hiệu ứng nhấn */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full transform rounded-lg bg-gradient-to-r from-primary-600 to-primary-500 py-3 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-primary-500/30 active:scale-95 ${
+            className={`w-full transform rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 py-3 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-blue-500/30 active:scale-95 ${
               loading ? 'cursor-not-allowed opacity-70' : ''
             }`}
           >

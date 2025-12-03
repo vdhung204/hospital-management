@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { MENU_ITEMS } from '../config/menuConfig';
-import { LogOut, User as UserIcon } from 'lucide-react';
-import type { UserInfo } from '../types/auth'; // Nhớ import type này
- // Nhớ import type này
+import { LogOut, Search, Bell, Menu } from 'lucide-react';
+import type { UserInfo } from '../types/auth';
+import Logo from '@/assets/images/Logo.png';
+// Lưu ý: Nếu bạn chưa có file ảnh, hãy dùng đường dẫn tạm hoặc comment dòng này lại
+// import Logo from '@/assets/images/Logo.png'; 
+// Thay thế import Logo bằng đường dẫn tương đối hoặc URL tạm để tránh lỗi biên dịch khi xem trước
+//const Logo = "https://cdn-icons-png.flaticon.com/512/3063/3063823.png"; 
 
 const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // --- SỬA LỖI Ở ĐÂY ---
-  // 1. Lấy dữ liệu ngay khi khởi tạo state (Lazy init)
-  // Cách này chỉ chạy 1 lần khi component mount, không gây re-render
   const [user] = useState<UserInfo | null>(() => {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   });
 
-  // 2. useEffect chỉ còn nhiệm vụ đá về trang login nếu không có user
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -26,34 +26,36 @@ const MainLayout = () => {
 
   const handleLogout = () => {
     localStorage.clear();
-    // Chuyển hướng ngay lập tức
     window.location.href = '/login'; 
   };
 
-  // Nếu chưa có user (đang check hoặc redirect), không render gì cả để tránh lỗi UI
   if (!user) return null;
 
-  // --- Logic lọc menu giữ nguyên ---
-  // Xử lý mảng roles (đề phòng backend trả về null hoặc rỗng)
   const currentRoles = user.roles || [];
   const userRoles = currentRoles.map((r: string) => r.replace('ROLE_', ''));
   
+  // Logic lọc menu đơn giản hóa để tránh lỗi undefined
   const filteredMenu = MENU_ITEMS.filter(item => 
-    item.roles.some(role => userRoles.includes(role))
+    !item.roles || item.roles.length === 0 || item.roles.some(role => userRoles.includes(role) || userRoles.includes('ADMIN'))
   );
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* SIDEBAR - Giữ nguyên code cũ */}
-      <aside className="w-64 bg-white shadow-md flex flex-col">
-        <div className="p-6 border-b flex items-center gap-2">
-           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
-            H
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-800">
+      {/* --- SIDEBAR --- */}
+      <aside className="w-64 bg-white shadow-xl flex-col hidden md:flex z-20">
+        {/* Logo Area */}
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100">
+          <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-white shadow-sm border border-slate-100 p-1">
+             <img src={Logo} alt="Logo" className="h-full w-full object-contain" />
           </div>
-          <span className="text-xl font-bold text-gray-800">Hospital MIS</span>
+          <div>
+            <h1 className="text-lg font-bold text-slate-800 leading-tight">MediSync</h1>
+            <p className="text-xs text-slate-400 font-medium">Hospital MIS</p>
+          </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
           {filteredMenu.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
@@ -62,52 +64,84 @@ const MainLayout = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                   isActive 
-                    ? 'bg-blue-50 text-blue-600 font-medium' 
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-teal-50 text-teal-700 font-semibold shadow-sm' 
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <Icon size={20} />
-                <span>{item.title}</span>
+                <Icon size={20} className={`transition-colors ${isActive ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                <span className="text-sm">{item.title}</span>
+                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-teal-500"></div>}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t">
+        {/* Logout Area */}
+        <div className="p-4 border-t border-slate-100 bg-slate-50/50">
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 w-full rounded-lg transition"
+            className="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-red-600 hover:bg-red-50 w-full rounded-lg transition-all duration-200 group"
           >
-            <LogOut size={20} />
-            <span>Đăng xuất</span>
+            <LogOut size={20} className="group-hover:text-red-500 transition-colors" />
+            <span className="text-sm font-medium">Đăng xuất</span>
           </button>
         </div>
       </aside>
 
-      {/* MAIN CONTENT - Giữ nguyên code cũ */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white shadow-sm h-16 flex items-center justify-between px-8">
-          <h2 className="text-lg font-semibold text-gray-700">
-            Hệ thống quản lý bệnh viện
-          </h2>
+      {/* --- MAIN CONTENT --- */}
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Header */}
+        <header className="bg-white shadow-sm h-16 flex items-center justify-between px-6 md:px-8 z-10 border-b border-slate-200">
+          {/* Mobile Menu Toggle */}
+          <div className="flex items-center gap-4 md:hidden">
+             <button className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
+                <Menu size={24} />
+             </button>
+             <h2 className="text-lg font-bold text-slate-800">MediSync</h2>
+          </div>
+
+          {/* Desktop Title */}
+          <div className="hidden md:block">
+             <h2 className="text-lg font-bold text-slate-700">Hệ thống quản lý bệnh viện</h2>
+             <p className="text-xs text-slate-400">Welcome back, {user.fullName}</p>
+          </div>
           
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{user.fullName}</p>
-              {/* Sửa hiển thị roles một chút để tránh lỗi nếu mảng rỗng */}
-              <p className="text-xs text-gray-500">
-                {user.roles ? user.roles.join(', ') : ''}
-              </p>
+          {/* Right Actions */}
+          <div className="flex items-center gap-3 md:gap-5">
+            <div className="relative hidden lg:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm nhanh..." 
+                className="pl-10 pr-4 py-2 w-64 rounded-full bg-slate-100 border-none text-sm focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all outline-none"
+              />
             </div>
-            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-               <UserIcon size={24} />
+
+            <button className="relative p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+              <Bell size={20} />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 border border-white"></span>
+            </button>
+
+            <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
+              <div className="text-right hidden md:block">
+                <p className="text-sm font-semibold text-slate-700">{user.fullName}</p>
+                <p className="text-[10px] uppercase font-bold text-teal-600 tracking-wider bg-teal-50 px-2 py-0.5 rounded-full inline-block">
+                  {user.roles ? user.roles[0]?.replace('ROLE_', '') : 'USER'}
+                </p>
+              </div>
+              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 p-0.5 cursor-pointer hover:shadow-md transition-shadow">
+                 <div className="h-full w-full rounded-full bg-white flex items-center justify-center text-teal-600 font-bold text-sm">
+                    {user.fullName.charAt(0)}
+                 </div>
+              </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-6">
+        {/* Page Content */}
+        <main className="flex-1 overflow-auto p-4 md:p-8 bg-slate-50">
             <Outlet />
         </main>
       </div>

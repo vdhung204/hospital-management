@@ -1,5 +1,3 @@
-// src/App.tsx
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,10 +6,10 @@ import LoginPage from './pages/auth/LoginPage';
 import MainLayout from '@/layout/MainLayout'
 import ProtectedRoute from '@/components/ProtectedRouter'
 import PatientPage from '@/pages/reception/PatientPage';
+import DoctorQueuePage from './pages/doctor/DoctorQueuePage';
 
 // Import các trang chức năng (tạo placeholder trước)
 const Dashboard = () => <div>Trang Dashboard Thống kê</div>;
-const DoctorQueue = () => <div>Trang Danh sách chờ khám của Bác sĩ</div>;
 const Pharmacy = () => <div>Trang Kho dược & Cấp phát</div>;
 const Settings = () => <div>Trang Cấu hình Admin</div>;
 
@@ -38,7 +36,7 @@ function App() {
 
             {/* 3. Nhóm route cho Bác sĩ */}
             <Route element={<ProtectedRoute allowedRoles={['DOCTOR', 'ADMIN']} />}>
-                <Route path="/doctor/queue" element={<DoctorQueue />} />
+                <Route path="/doctor/queue" element={<DoctorQueuePage />} />
             </Route>
 
             {/* 4. Nhóm route cho Dược sĩ */}
