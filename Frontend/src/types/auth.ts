@@ -11,6 +11,7 @@ export interface UserInfo {
   fullName: string;
   roles: string[];
   patientId?: number | null;
+  staffId?: number | null;
 }
 
 export interface LoginResponse extends UserInfo {

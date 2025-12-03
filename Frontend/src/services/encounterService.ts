@@ -1,14 +1,12 @@
+
 import axiosClient from '../api/axiosClient';
-import type { Department, EncounterCreateRequest, EncounterResponse, Staff } from '@/types/Encounter';
+import type { Department, EncounterCreateRequest, EncounterDetail, EncounterResponse, Staff } from '@/types/Encounter';
 
 export const encounterService = {
-  // 1. Tạo lượt khám
   create: async (data: EncounterCreateRequest) => {
     const response = await axiosClient.post('/encounters', data);
     return response.data;
   },
-
-  // 2. Lấy danh sách Khoa (Dropdown)
   getDepartments: async () => {
     const response = await axiosClient.get<Department[]>('/departments');
     return response.data;
@@ -24,15 +22,26 @@ export const encounterService = {
     const response = await axiosClient.get<EncounterResponse[]>(`/encounters/doctor-queue/${doctorId}`);
     return response.data;
   },
-  
-  // Hàm cập nhật trạng thái (Bắt đầu khám / Hoàn thành)
-  //updateStatus: async (id: number, status: string) => {
-      // Backend cần có API update status riêng hoặc dùng update chung
-      // Tạm thời giả định bạn dùng API update chung hoặc tạo API patch status
-      // Nếu chưa có, bạn có thể gọi API update full object (hơi cồng kềnh)
-      // Tốt nhất backend nên có: PUT /api/encounters/{id}/status
-      
-      // Ở đây mình ví dụ gọi PUT update full (cách lười), nhưng đúng ra nên viết API riêng ở BE
-      // await axiosClient.put(`/encounters/${id}/status`, { status });
-  //}
+  getDetail: async (id: number) => {
+    const response = await axiosClient.get<EncounterDetail>(`/encounters/${id}/detail`);
+    return response.data;
+  },
+  updateStatus: async (id: number, status: string) => {
+    await axiosClient.put(`/encounters/${id}/status`, null, {
+        params: { status }
+    });
+  },
+ addNote: async (encounterId: number, data: { noteType: string, content: string, createdBy: number }) => {
+    const response = await axiosClient.post(`/encounters/${encounterId}/notes`, data);
+    return response.data;
+  },
+  saveDiagnoses: async (encounterId: number, diagnoses: { icd10Code: string, primary: boolean }) => {
+    // Gọi API vừa tạo ở backend
+    await axiosClient.post(`/encounters/${encounterId}/diagnoses`, diagnoses);
+  },
+  getDiagnoses: async (encounterId: number) => {
+    const response = await axiosClient.get(`/encounters/${encounterId}/diagnoses`);
+    return response.data;
+  },
+
 };

@@ -7,6 +7,9 @@ import MainLayout from '@/layout/MainLayout'
 import ProtectedRoute from '@/components/ProtectedRouter'
 import PatientPage from '@/pages/reception/PatientPage';
 import DoctorQueuePage from './pages/doctor/DoctorQueuePage';
+import DoctorExamPage from './pages/doctor/DoctorExamPage';
+import MedicalExamPage from './pages/doctor/MedicalExamPage';
+import TechnicianPage from './pages/technician/TechnicianPage';
 
 // Import các trang chức năng (tạo placeholder trước)
 const Dashboard = () => <div>Trang Dashboard Thống kê</div>;
@@ -37,8 +40,14 @@ function App() {
             {/* 3. Nhóm route cho Bác sĩ */}
             <Route element={<ProtectedRoute allowedRoles={['DOCTOR', 'ADMIN']} />}>
                 <Route path="/doctor/queue" element={<DoctorQueuePage />} />
+                <Route path="/doctor/exam1/:id" element={<DoctorExamPage />} />
+                <Route path="/doctor/exam/:id" element={<MedicalExamPage />} />
+                
             </Route>
-
+            {/* Ky thuat vien */}
+            <Route element={<ProtectedRoute allowedRoles={['TECHNICIAN', 'ADMIN', 'DOCTOR']} />}>
+                <Route path="/technician/worklist" element={<TechnicianPage />} />
+            </Route>
             {/* 4. Nhóm route cho Dược sĩ */}
             <Route element={<ProtectedRoute allowedRoles={['PHARMACIST', 'ADMIN']} />}>
                 <Route path="/pharmacy" element={<Pharmacy />} />

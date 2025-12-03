@@ -51,7 +51,7 @@ export const MENU_ITEMS: MenuItem[] = [
     title: 'Cận lâm sàng (Lab/X-Ray)',
     path: '/technician/worklist',
     icon: Activity,
-    roles: ['TECHNICIAN', 'ADMIN'],
+    roles: ['DOCTOR','TECHNICIAN', 'ADMIN'],
   },
   {
     title: 'Quản trị hệ thống',

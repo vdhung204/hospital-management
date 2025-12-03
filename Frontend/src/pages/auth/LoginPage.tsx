@@ -28,6 +28,7 @@ const LoginPage = () => {
         userId: data.userId,
         username: data.username,
         fullName: data.fullName,
+        staffId: data.staffId,
         roles: data.roles
       }));
 
