@@ -1,5 +1,8 @@
 package com.hospital.hospitalmis.dto.clinical_result;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 public class ClinicalOrderItemResponse {
 
     private Long id;
@@ -12,6 +15,13 @@ public class ClinicalOrderItemResponse {
     private String imagingProcedureName;
     private String status;
 
+    private String patientName;
+    private String patientCode;
+    private String patientGender;
+    private LocalDate patientDob;
+
+    private String doctorName;
+    private LocalDateTime orderedAt;
     // getters/setters
 
     public Long getId() {
@@ -84,5 +94,53 @@ public class ClinicalOrderItemResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public LocalDateTime getOrderedAt() {
+        return orderedAt;
+    }
+
+    public void setOrderedAt(LocalDateTime orderedAt) {
+        this.orderedAt = orderedAt;
+    }
+
+    public String getDoctorName() {
+        return doctorName;
+    }
+
+    public void setDoctorName(String doctorName) {
+        this.doctorName = doctorName;
+    }
+
+    public LocalDate getPatientDob() {
+        return patientDob;
+    }
+
+    public void setPatientDob(LocalDate patientDob) {
+        this.patientDob = patientDob;
+    }
+
+    public String getPatientGender() {
+        return patientGender;
+    }
+
+    public void setPatientGender(String patientGender) {
+        this.patientGender = patientGender;
+    }
+
+    public String getPatientCode() {
+        return patientCode;
+    }
+
+    public void setPatientCode(String patientCode) {
+        this.patientCode = patientCode;
+    }
+
+    public String getPatientName() {
+        return patientName;
+    }
+
+    public void setPatientName(String patientName) {
+        this.patientName = patientName;
     }
 }

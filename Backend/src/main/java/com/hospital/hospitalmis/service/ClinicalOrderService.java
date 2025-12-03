@@ -23,7 +23,9 @@ public class ClinicalOrderService {
     private final LabTestRepository labTestRepository;
     private final ImagingProcedureRepository imagingProcedureRepository;
     private final LabResultRepository labResultRepository;
-    private final  ImagingResultRepository imagingResultRepository;
+    private final ImagingResultRepository imagingResultRepository;
+
+    private final StaffRepository staffRepository;
 
     public ClinicalOrderService(ClinicalOrderRepository clinicalOrderRepository,
                                 ClinicalOrderItemRepository clinicalOrderItemRepository,
@@ -32,7 +34,8 @@ public class ClinicalOrderService {
                                 LabTestRepository labTestRepository,
                                 ImagingProcedureRepository imagingProcedureRepository,
                                 LabResultRepository labResultRepository,
-                                ImagingResultRepository imagingResultRepository) {
+                                ImagingResultRepository imagingResultRepository,
+                                StaffRepository staffRepository) {
         this.clinicalOrderRepository = clinicalOrderRepository;
         this.clinicalOrderItemRepository = clinicalOrderItemRepository;
         this.encounterRepository = encounterRepository;
@@ -41,6 +44,7 @@ public class ClinicalOrderService {
         this.imagingProcedureRepository = imagingProcedureRepository;
         this.labResultRepository = labResultRepository;
         this.imagingResultRepository = imagingResultRepository;
+        this.staffRepository = staffRepository;
     }
 
     // ---------------- Tạo y lệnh cho 1 encounter ----------------
@@ -158,6 +162,30 @@ public class ClinicalOrderService {
         if (item.getImagingProcedureId() != null) {
             imagingProcedureRepository.findById(item.getImagingProcedureId())//Math.toIntExact(item.getImagingProcedureId())
                     .ifPresent(ip -> dto.setImagingProcedureName(ip.getName()));
+        }
+
+        ClinicalOrder order = item.getClinicalOrder();
+        if (order != null) {
+            dto.setOrderedAt(order.getCreatedAt());
+
+            // Lấy Bác sĩ
+            if (order.getOrderedBy() != null) {
+                staffRepository.findById(order.getOrderedBy())
+                        .ifPresent(staff -> dto.setDoctorName(staff.getFullName()));
+            }
+
+            // Lấy Bệnh nhân (Thông qua Encounter)
+            Encounter enc = order.getEncounter();
+            if (enc != null && enc.getPatient() != null) {
+                Patient p = enc.getPatient();
+                dto.setPatientName(p.getFullName());
+                dto.setPatientCode(p.getPatientCode());
+                dto.setPatientGender(p.getGender());
+                // Tính tuổi sơ bộ
+                if (p.getDateOfBirth() != null) {
+                    dto.setPatientDob(p.getDateOfBirth());
+                }
+            }
         }
 
         return dto;

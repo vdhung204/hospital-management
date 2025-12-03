@@ -9,6 +9,7 @@ public class ClinicalNoteResponse {
     private String noteType;
     private String content;
     private Long createdBy;
+    private String createdByName;
     private LocalDateTime createdAt;
 
     public Long getId() { return id; }
@@ -28,4 +29,12 @@ public class ClinicalNoteResponse {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
 }
