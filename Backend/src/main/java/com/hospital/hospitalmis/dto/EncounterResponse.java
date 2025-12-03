@@ -1,5 +1,6 @@
 package com.hospital.hospitalmis.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class EncounterResponse {
@@ -8,6 +9,8 @@ public class EncounterResponse {
     private Long patientId;
     private String patientCode;
     private String patientName;
+    private String parientGender;
+    private LocalDate patientDob;
 
     private Long departmentId;
     private String departmentName;
@@ -20,6 +23,8 @@ public class EncounterResponse {
     private Integer queueNumber; // Hiển thị số thứ tự
     private Double height;
     private Double weight;
+    private String bloodPressure;
+    private int pulse;
     // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -73,5 +78,37 @@ public class EncounterResponse {
 
     public void setWeight(Double weight) {
         this.weight = weight;
+    }
+
+    public String getParientGender() {
+        return parientGender;
+    }
+
+    public void setParientGender(String parientGender) {
+        this.parientGender = parientGender;
+    }
+
+    public LocalDate getPatientDob() {
+        return patientDob;
+    }
+
+    public void setPatientDob(LocalDate patientDob) {
+        this.patientDob = patientDob;
+    }
+
+    public String getBloodPressure() {
+        return bloodPressure;
+    }
+
+    public void setBloodPressure(String bloodPressure) {
+        this.bloodPressure = bloodPressure;
+    }
+
+    public int getPulse() {
+        return pulse;
+    }
+
+    public void setPulse(int pulse) {
+        this.pulse = pulse;
     }
 }

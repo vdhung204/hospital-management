@@ -92,4 +92,10 @@ public class EncounterController {
         encounterService.deleteEncounter(id); // Hàm này ta vừa thêm bên Service
         return ResponseEntity.noContent().build();
     }
+
+    // GET /api/encounters/doctor-queue/{doctorId}
+    @GetMapping("/encounters/doctor-queue/{doctorId}")
+    public ResponseEntity<List<EncounterResponse>> getDoctorQueue(@PathVariable Long doctorId) {
+        return ResponseEntity.ok(encounterService.getDoctorQueue(doctorId));
+    }
 }

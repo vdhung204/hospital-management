@@ -28,4 +28,16 @@ public interface EncounterRepository extends JpaRepository<Encounter, Long> {
     @Query("SELECT COUNT(e) FROM Encounter e " +
             "WHERE e.visitDate BETWEEN :start AND :end AND e.isDeleted = false")
     Long countEncounters(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // src/main/java/com/hospital/hospitalmis/repository/EncounterRepository.java
+
+    @Query("SELECT e FROM Encounter e WHERE " +
+            "e.doctorId = :doctorId " +
+            "AND e.visitDate BETWEEN :start AND :end " +
+            "AND e.status IN ('WAITING', 'IN_PROGRESS') " +
+            "AND e.isDeleted = false " +
+            "ORDER BY e.status DESC, e.queueNumber ASC")
+    List<Encounter> findDoctorQueue(@Param("doctorId") Long doctorId,
+                                    @Param("start") LocalDateTime start,
+                                    @Param("end") LocalDateTime end);
 }

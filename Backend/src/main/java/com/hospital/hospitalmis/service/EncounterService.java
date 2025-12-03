@@ -142,6 +142,9 @@ public class EncounterService {
             dto.setPatientId(enc.getPatient().getId());
             dto.setPatientCode(enc.getPatient().getPatientCode());
             dto.setPatientName(enc.getPatient().getFullName());
+            dto.setEncounterType(enc.getPatient().getGender());
+            dto.setParientGender(enc.getPatient().getGender());
+            dto.setPatientDob(enc.getPatient().getDateOfBirth());
         }
 
         if (enc.getDepartment() != null) {
@@ -156,6 +159,8 @@ public class EncounterService {
         dto.setHeight(enc.getHeight());
         dto.setWeight(enc.getWeight());
         dto.setQueueNumber(enc.getQueueNumber());
+        dto.setBloodPressure(enc.getBloodPressure());
+        dto.setPulse(enc.getPulse());
 
         return dto;
     }
@@ -228,4 +233,13 @@ public class EncounterService {
         return dto;
     }
 
+    public List<EncounterResponse> getDoctorQueue(Long doctorId) {
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end = LocalDate.now().atTime(LocalTime.MAX);
+
+        return encounterRepository.findDoctorQueue(doctorId, start, end)
+                .stream()
+                .map(this::mapToResponse) // Hàm map cũ bạn đã có
+                .collect(Collectors.toList());
+    }
 }
