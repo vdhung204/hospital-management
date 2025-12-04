@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -77,54 +78,55 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public PrescriptionDetailDto createPrescription(Long encounterId, PrescriptionCreateRequest request) {
+        Prescription prescription = prescriptionRepository.findByEncounter_Id(encounterId)
+                .stream()
+                .filter(p -> "ACTIVE".equals(p.getStatus()))
+                .findFirst()
+                .orElse(null);
 
-        if (request.getItems() == null || request.getItems().isEmpty()) {
-            throw new RuntimeException("Prescription must have at least one item");
-        }
+        if (prescription == null) {
+            Encounter encounter = encounterRepository.findById(encounterId)
+                    .orElseThrow(() -> new RuntimeException("Encounter not found"));
 
-        Encounter encounter = encounterRepository.findById(encounterId)
-                .orElseThrow(() -> new RuntimeException("Encounter not found"));
-
-        // xác định prescriber
-        Staff prescriber = null;
-        if (request.getPrescriberId() != null) {
-            prescriber = staffRepository.findById(request.getPrescriberId())
-                    .orElseThrow(() -> new RuntimeException("Prescriber (staff) not found"));
-        } else if (encounter.getDoctorId() != null) {
-            prescriber = staffRepository.findById(encounter.getDoctorId())
-                    .orElseThrow(() -> new RuntimeException("Prescriber (staff) not found"));// fallback: bác sĩ chính của encounter
-        }
-
-        Prescription p = new Prescription();
-        p.setEncounter(encounter);
-        p.setPrescriber(prescriber);
-        p.setCreatedAt(LocalDateTime.now());
-        p.setStatus("ACTIVE");
-
-        // build list item
-        for (PrescriptionItemRequest itemReq : request.getItems()) {
-            Drug drug = drugRepository.findById(itemReq.getDrugId())
-                    .orElseThrow(() -> new RuntimeException("Drug not found: " + itemReq.getDrugId()));
-
-            if (itemReq.getQuantity() == null || itemReq.getQuantity() <= 0) {
-                throw new RuntimeException("Quantity must be > 0 for drug " + drug.getName());
+            Staff prescriber = null;
+            if (request.getPrescriberId() != null) {
+                prescriber = staffRepository.findById(request.getPrescriberId()).orElse(null);
+            } else if (encounter.getDoctorId() != null) {
+                prescriber = staffRepository.findById(encounter.getDoctorId()).orElse(null);
             }
 
-            PrescriptionItem item = new PrescriptionItem();
-            item.setDrug(drug);
-            item.setDose(itemReq.getDose());
-            item.setFrequency(itemReq.getFrequency());
-            item.setDurationDays(itemReq.getDurationDays());
-            item.setQuantity(itemReq.getQuantity());
-
-            // dùng helper để set 2 chiều
-            p.addItem(item);
+            prescription = new Prescription();
+            prescription.setEncounter(encounter);
+            prescription.setPrescriber(prescriber);
+            prescription.setCreatedAt(LocalDateTime.now());
+            prescription.setStatus("ACTIVE");
+            prescription = prescriptionRepository.save(prescription);
+        } else {
+            prescription.getItems().clear();
+            prescription.setCreatedAt(LocalDateTime.now());
         }
 
-        Prescription saved = prescriptionRepository.save(p);
-        // thanks cascade, items đã save theo luôn
+        if (request.getItems() != null) {
+            for (PrescriptionItemRequest itemReq : request.getItems()) {
+                Drug drug = drugRepository.findById(itemReq.getDrugId())
+                        .orElseThrow(() -> new RuntimeException("Drug not found: " + itemReq.getDrugId()));
 
-        return toDetailDto(saved);
+                if (itemReq.getQuantity() == null || itemReq.getQuantity() <= 0) {
+                    throw new RuntimeException("Quantity must be > 0 for drug " + drug.getName());
+                }
+
+                PrescriptionItem item = new PrescriptionItem();
+                item.setPrescription(prescription);
+                item.setDrug(drug);
+                item.setDose(itemReq.getDose());
+                item.setFrequency(itemReq.getFrequency());
+                item.setDurationDays(itemReq.getDurationDays());
+                item.setQuantity(itemReq.getQuantity());
+
+                prescriptionItemRepository.save(item);
+            }
+        }
+        return toDetailDto(prescription);
     }
 
     @Override
@@ -144,6 +146,13 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .toList();
     }
 
+    @Override
+    public List<PrescriptionDetailDto> getPendingPrescriptions() {
+        return prescriptionRepository.findPendingPrescriptions()
+                .stream()
+                .map(this::toDetailDto)
+                .collect(Collectors.toList());
+    }
     @Override
     public PrescriptionDetailDto cancelPrescription(Long id) {
         Prescription p = prescriptionRepository.findById(id)

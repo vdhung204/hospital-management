@@ -14,4 +14,5 @@ public interface PrescriptionService {
     List<PrescriptionDetailDto> getByEncounter(Long encounterId);
 
     PrescriptionDetailDto cancelPrescription(Long id);
+    List<PrescriptionDetailDto> getPendingPrescriptions();
 }

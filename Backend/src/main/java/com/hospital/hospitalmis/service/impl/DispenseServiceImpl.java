@@ -70,6 +70,11 @@ public class DispenseServiceImpl implements DispenseService {
 
         if (d.getPrescription() != null) {
             dto.setPrescriptionId(d.getPrescription().getId());
+            if(d.getPrescription().getEncounter() != null
+            && d.getPrescription().getEncounter().getPatient() != null) {
+                dto.setPatientCode(d.getPrescription().getEncounter().getPatient().getPatientCode());
+                dto.setPatientName(d.getPrescription().getEncounter().getPatient().getFullName());
+            }
         }
 
         if (d.getPharmacist() != null) {
@@ -145,7 +150,9 @@ public class DispenseServiceImpl implements DispenseService {
 
             stockTransactionRepository.save(tx);
         }
-
+        // Cập nhật đơn thuốc
+        prescription.setStatus("DONE");
+        prescriptionRepository.save(prescription);
         // 3. Load lại items để map DTO
         List<DispenseItem> items = dispenseItemRepository
                 .findAll() // có thể tối ưu bằng custom query theo dispense_id
@@ -176,6 +183,21 @@ public class DispenseServiceImpl implements DispenseService {
         List<Dispense> list = dispenseRepository.findByPrescriptionId(prescriptionId);
         return list.stream()
                 .map(d -> {
+                    List<DispenseItem> items = dispenseItemRepository.findAll().stream()
+                            .filter(di -> di.getDispense().getId().equals(d.getId()))
+                            .toList();
+                    return toDetailDto(d, items);
+                })
+                .toList();
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DispenseDetailDto> getAll() {
+        return dispenseRepository.findAllByOrderByDispensedAtDesc().stream()
+                .map(d -> {
+                    // Lazy load items cho từng phiếu (hoặc bỏ qua items nếu chỉ cần hiện list tóm tắt)
                     List<DispenseItem> items = dispenseItemRepository.findAll().stream()
                             .filter(di -> di.getDispense().getId().equals(d.getId()))
                             .toList();

@@ -24,7 +24,10 @@ public class DispenseController {
         DispenseDetailDto dto = dispenseService.createDispense(request);
         return ResponseEntity.ok(dto);
     }
-
+    @GetMapping
+    public ResponseEntity<List<DispenseDetailDto>> getAll() {
+        return ResponseEntity.ok(dispenseService.getAll());
+    }
     // GET /api/dispenses/{id} : xem chi tiết 1 phiếu
     @GetMapping("/{id}")
     public ResponseEntity<DispenseDetailDto> getOne(@PathVariable Long id) {

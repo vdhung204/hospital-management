@@ -29,7 +29,6 @@ public class PrescriptionController {
         return ResponseEntity.ok(dto);
     }
 
-    // GET /api/encounters/{encounterId}/prescriptions : danh sách đơn theo encounter
     @GetMapping("/encounters/{encounterId}/prescriptions")
     public ResponseEntity<List<PrescriptionDetailDto>> getByEncounter(
             @PathVariable Long encounterId
@@ -37,15 +36,18 @@ public class PrescriptionController {
         return ResponseEntity.ok(prescriptionService.getByEncounter(encounterId));
     }
 
-    // GET /api/prescriptions/{id} : chi tiết 1 đơn
     @GetMapping("/prescriptions/{id}")
     public ResponseEntity<PrescriptionDetailDto> getOne(@PathVariable Long id) {
         return ResponseEntity.ok(prescriptionService.getById(id));
     }
 
-    // POST /api/prescriptions/{id}/cancel : huỷ đơn
     @PostMapping("/prescriptions/{id}/cancel")
     public ResponseEntity<PrescriptionDetailDto> cancel(@PathVariable Long id) {
         return ResponseEntity.ok(prescriptionService.cancelPrescription(id));
+    }
+
+    @GetMapping("/prescriptions/pending")
+    public ResponseEntity<List<PrescriptionDetailDto>> getPending() {
+        return ResponseEntity.ok(prescriptionService.getPendingPrescriptions());
     }
 }

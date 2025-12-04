@@ -10,6 +10,9 @@ public class DispenseDetailDto {
     private Long pharmacistId;
     private String pharmacistName; // nếu anh muốn hiển thị tên
 
+    private String patientName;
+    private String patientCode;
+
     private LocalDateTime dispensedAt;
     private String status;
 
@@ -36,4 +39,20 @@ public class DispenseDetailDto {
 
     public List<DispenseItemDto> getItems() { return items; }
     public void setItems(List<DispenseItemDto> items) { this.items = items; }
+
+    public String getPatientName() {
+        return patientName;
+    }
+
+    public void setPatientName(String patientName) {
+        this.patientName = patientName;
+    }
+
+    public String getPatientCode() {
+        return patientCode;
+    }
+
+    public void setPatientCode(String patientCode) {
+        this.patientCode = patientCode;
+    }
 }

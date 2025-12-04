@@ -8,4 +8,6 @@ import java.util.List;
 public interface DispenseRepository extends JpaRepository<Dispense, Long> {
 
     List<Dispense> findByPrescriptionId(Long prescriptionId);
+
+    List<Dispense> findAllByOrderByDispensedAtDesc();
 }
