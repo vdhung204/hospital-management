@@ -1,3 +1,4 @@
+import type { PrescriptionResponse} from "./MedicalExam";
 export interface EncounterCreateRequest {
   patientId: number;
   departmentId: number;
@@ -50,6 +51,7 @@ export interface EncounterDetail {
   pulse?: number;
 
   notes: ClinicalNote[];
+  prescriptions?: PrescriptionResponse[];
 }
 export interface Department {
   id: number;

@@ -10,10 +10,10 @@ import DoctorQueuePage from './pages/doctor/DoctorQueuePage';
 import DoctorExamPage from './pages/doctor/DoctorExamPage';
 import MedicalExamPage from './pages/doctor/MedicalExamPage';
 import TechnicianPage from './pages/technician/TechnicianPage';
+import PharmacyPage from './pages/pharmacy/PharmacyPage';
 
 // Import các trang chức năng (tạo placeholder trước)
 const Dashboard = () => <div>Trang Dashboard Thống kê</div>;
-const Pharmacy = () => <div>Trang Kho dược & Cấp phát</div>;
 const Settings = () => <div>Trang Cấu hình Admin</div>;
 
 function App() {
@@ -50,7 +50,7 @@ function App() {
             </Route>
             {/* 4. Nhóm route cho Dược sĩ */}
             <Route element={<ProtectedRoute allowedRoles={['PHARMACIST', 'ADMIN']} />}>
-                <Route path="/pharmacy" element={<Pharmacy />} />
+                <Route path="/pharmacy" element={<PharmacyPage />} />
             </Route>
 
             {/* 5. Nhóm route Admin */}

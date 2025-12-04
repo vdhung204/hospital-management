@@ -1,63 +1,74 @@
-// src/types/medical-exam.ts
 
-// Thuốc (từ kho dược)
 export interface Drug {
   id: number;
   code: string;
   name: string;
-  form: string;     // Đơn vị (Viên, Lọ...)
-  strength: string; // Hàm lượng (500mg...)
-  quantityOnHand?: number; // Tồn kho (nếu có API trả về)
+  form: string;     
+  strength: string; 
+  quantityOnHand?: number; 
 }
-
-// Chi tiết đơn thuốc (khi gửi về Backend)
 export interface PrescriptionItemRequest {
   drugId: number;
   quantity: number;
-  dose: string;      // Liều dùng (Sáng 1...)
-  frequency: string; // Tần suất (2 lần/ngày)
-  durationDays: number; // Số ngày uống
+  dose: string;      
+  frequency: string; 
+  durationDays: number; 
 }
-
-// Gửi về Backend để tạo đơn
 export interface PrescriptionCreateRequest {
   items: PrescriptionItemRequest[];
 }
-
 export interface UI_PrescriptionItem extends PrescriptionItemRequest {
-    tempId: number; // ID tạm thời của frontend
+    tempId: number; 
     drugName: string;
     unit: string;
     usage: string; 
 }
-// src/types/medical-exam.ts (Thêm vào cuối file)
+export interface PrescriptionItemResponse {
+  id: number;
+  drugId: number;
+  drugCode: string;
+  drugName: string;
+  form: string;
+  strength: string;
+  dose: string;
+  frequency: string;
+  durationDays: number;
+  quantity: number;
+}
 
+export interface PrescriptionResponse {
+  id: number;
+  encounterId: number;
+  prescriberId?: number;
+  prescriberName?: string;
+  createdAt: string;
+  status: string; 
+  items: PrescriptionItemResponse[];
+}
 export interface ServiceItem {
   id: number;
   code: string;
   name: string;
-  serviceType: 'LAB' | 'IMG' | 'OTHER'; // Phân loại để hiện icon
+  serviceType: 'LAB' | 'IMG' | 'OTHER';
   price?: number;
 }
 
 export interface ClinicalOrder {
   id: number;
   encounterId: number;
-  status: string; // ORDERED, IN_PROGRESS, DONE
+  status: string;
   createdAt: string;
   items: ClinicalOrderItemResponse[];
 }
 
 export interface ClinicalOrderItemRequest {
-  itemType: 'LAB_TEST' | 'IMG_PROC'; // Java là String, nhưng ta gán cứng 2 loại này cho chuẩn
-  serviceItemId: number;      // Bắt buộc (Long -> number)
-  labTestId?: number;         // Optional (Long -> number) - Dành cho Xét nghiệm
-  imagingProcedureId?: number;// Optional (Long -> number) - Dành cho CĐHA
+  itemType: 'LAB_TEST' | 'IMG_PROC'; 
+  serviceItemId: number;    
+  labTestId?: number;       
+  imagingProcedureId?: number;
 }
-
-// 2. DTO gửi đi để tạo phiếu (Khớp với ClinicalOrderCreateRequest.java)
 export interface ClinicalOrderCreateRequest {
-  orderedBy: number; // ID Bác sĩ (Long -> number)
+  orderedBy: number;
   items: ClinicalOrderItemRequest[];
 }
 
@@ -65,6 +76,6 @@ export interface ClinicalOrderItemResponse {
   id: number;
   serviceItemId: number;
   serviceItemName: string;
-  itemType: string; // LAB_TEST, IMG_PROC
+  itemType: string; 
   status: string;
 }

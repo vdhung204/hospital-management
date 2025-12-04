@@ -37,6 +37,4 @@ export const medicalService = {
     const response = await axiosClient.get(`/orders/items/${itemId}/imaging-results`);
     return response.data;
   }
-
-
 };

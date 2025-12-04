@@ -36,7 +36,7 @@ const MedicalExamPage = () => {
   const [noteContent, setNoteContent] = useState(''); // Nội dung đã được format
   const [currentNoteType, setCurrentNoteType] = useState('SOAP'); // Mặc định SOAP
   const [prescriptionItems, setPrescriptionItems] = useState<UI_PrescriptionItem[]>([]);
-
+  const [prescriptionStatus, setPrescriptionStatus] = useState('');
   // --- LOAD DATA ---
   useEffect(() => {
     const initData = async () => {
@@ -52,6 +52,26 @@ const MedicalExamPage = () => {
                 console.log(encData.notes);
                 setHistoryNotes(encData.notes);
             }
+            if (encData.prescriptions && encData.prescriptions.length > 0) {
+                const savedPrescription = encData.prescriptions[0]; 
+                setPrescriptionStatus(savedPrescription.status);
+                if (savedPrescription.items) {
+                    const mappedItems: UI_PrescriptionItem[] = savedPrescription.items.map((item) => ({
+                        tempId: item.id, // Dùng luôn ID thật làm key
+                        drugId: item.drugId,
+                        drugName: item.drugName,
+                        unit: item.form || 'Đv', // Backend trả về 'form' (viên/lọ)
+                        strength: item.strength, // Hàm lượng
+                        quantity: item.quantity,
+                        dose: item.dose,         // Backend lưu 'dose'
+                        usage: item.dose,        // Frontend dùng 'usage' để hiển thị
+                        frequency: item.frequency,
+                        durationDays: item.durationDays
+                    }));
+
+                    setPrescriptionItems(mappedItems);
+                }
+            }
         } catch (error) {
             console.log(error);
             toast.error('Lỗi tải hồ sơ');
@@ -60,16 +80,13 @@ const MedicalExamPage = () => {
     if (encounterId) initData();
   }, [encounterId]);
 
-  // --- HÀM LƯU TỔNG ---
   const handleSave = async (isDraft: boolean = false) => {
     if (!encounter) return;
     try {
-        // --- 1. LƯU NOTE (Ghi chú / Diễn biến / SOAP) ---
         let finalContent = noteContent;
         if (diagnosis) {
              finalContent += `\n\n[CHẨN ĐOÁN SƠ BỘ]: ${diagnosis}`;
         }
-
         if (finalContent.trim()) {
             const newNote = await encounterService.addNote(encounterId, {
                 noteType: currentNoteType,
@@ -77,57 +94,40 @@ const MedicalExamPage = () => {
                 createdBy: user.userId
             });
             setHistoryNotes(prev => [...prev,newNote]);
-            setNoteContent(''); // Reset ô nhập SOAP
-            setDiagnosis('');   // Reset ô chẩn đoán sơ bộ
+            setNoteContent(''); 
+            setDiagnosis('');  
         }
-
-        // --- 2. LƯU ICD-10 (VÀO BẢNG RIÊNG) ---
-        // Nếu có nhập mã ICD10
         if (icd10.trim()) {
             console.log(icd10);
             await encounterService.saveDiagnoses(encounterId, 
                 { 
-                  icd10Code: icd10.trim(), // Mã J02.9
-                  primary: isPrimary            // Mặc định là bệnh chính
+                  icd10Code: icd10.trim(), 
+                  primary: isPrimary           
                 }
             );
         }
-
-        // --- 3. LƯU ĐƠN THUỐC (Giữ nguyên) ---
-        if (prescriptionItems.length > 0) { /* ... */ }
-
-        // --- 4. HOÀN THÀNH ---
+                // Lưu đơn thuốc
+        if (prescriptionItems.length > 0) {
+            const apiItems = prescriptionItems.map(i => ({
+                drugId: i.drugId,
+                quantity: i.quantity,
+                dose: i.dose, 
+                frequency: i.frequency || 'Hàng ngày',
+                durationDays: i.durationDays 
+            }));
+            await medicalService.createPrescription(encounterId, { items: apiItems });
+        }
+        // --- HOÀN THÀNH ---
         if (isDraft) {
             toast.success('Đã lưu dữ liệu');
         } else {
             if (window.confirm('Xác nhận hoàn thành?')) {
                 await encounterService.updateStatus(encounterId, 'COMPLETED');
-                navigate('/doctor/queue');
-            }
-        }
-        // 2. Lưu đơn thuốc
-        if (prescriptionItems.length > 0) {
-            const apiItems = prescriptionItems.map(i => ({
-                drugId: i.drugId,
-                quantity: i.quantity,
-                dose: i.usage, 
-                frequency: 'Hàng ngày',
-                durationDays: 5
-            }));
-            await medicalService.createPrescription(encounterId, { items: apiItems });
-        }
-        // 3. Hoàn thành
-        if (isDraft) {
-            // Nếu là Lưu nháp -> Chỉ hiện thông báo, KHÔNG chuyển trạng thái, KHÔNG navigate
-            toast.success('Đã lưu dữ liệu (Nháp)');
-        } else {
-            // Nếu là Hoàn thành -> Hỏi xác nhận -> Chuyển trạng thái -> Quay về list
-            if (window.confirm('Xác nhận hoàn thành ca khám?')) {
-                await encounterService.updateStatus(encounterId, 'COMPLETED');
                 toast.success('Hoàn thành ca khám!');
                 navigate('/doctor/queue');
             }
         }
+
     } catch (error) {
         console.log(error);
         toast.error('Lỗi khi lưu');
@@ -201,8 +201,8 @@ const MedicalExamPage = () => {
           <div className="flex border-b border-gray-100">
              {/* Navigation giữ nguyên, chỉ đổi activeTab */}
              <button onClick={() => setActiveTab('diagnosis')} className={`flex-1 py-4 text-sm font-medium border-b-2 ${activeTab==='diagnosis' ? 'border-teal-600 text-teal-700 bg-teal-50/50' : 'border-transparent text-gray-500'}`}>Khám & Chẩn đoán</button>
-             <button onClick={() => setActiveTab('prescription')} className={`flex-1 py-4 text-sm font-medium border-b-2 ${activeTab==='prescription' ? 'border-teal-600 text-teal-700 bg-teal-50/50' : 'border-transparent text-gray-500'}`}>Kê đơn thuốc</button>
              <button onClick={() => setActiveTab('lab')} className={`flex-1 py-4 text-sm font-medium border-b-2 ${activeTab==='lab' ? 'border-teal-600 text-teal-700 bg-teal-50/50' : 'border-transparent text-gray-500'}`}>Chỉ định CLS</button>
+             <button onClick={() => setActiveTab('prescription')} className={`flex-1 py-4 text-sm font-medium border-b-2 ${activeTab==='prescription' ? 'border-teal-600 text-teal-700 bg-teal-50/50' : 'border-transparent text-gray-500'}`}>Kê đơn thuốc</button>
           </div>
 
           <div className="flex-1 p-6 overflow-y-auto">
@@ -219,15 +219,18 @@ const MedicalExamPage = () => {
                 />
             )}
 
-             {activeTab === 'prescription' && (
+            {activeTab === 'lab' && <LabTab />}
+            
+            {activeTab === 'prescription' && (
                 <PrescriptionTab 
                     allDrugs={allDrugs}
                     items={prescriptionItems}
                     setItems={setPrescriptionItems}
+                    prescriptionStatus = {prescriptionStatus}
                 />
-             )}
+            )}
 
-             {activeTab === 'lab' && <LabTab />}
+            
           </div>
         </div>
       </div>
