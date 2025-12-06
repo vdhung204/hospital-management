@@ -7,3 +7,6 @@ pypdf
 gradio
 fastapi
 uvicorn
+docx
+huggingface-hub
+sentence-transformers
