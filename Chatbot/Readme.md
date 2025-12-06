@@ -1,12 +1,12 @@
 # RAG Chatbot y tế trả lời câu hỏi và thắc mắc của bệnh nhân
 
-Dự án này là một ví dụ minh họa cách ứng dụng kỹ thuật Retrieval-Augmented Generation (RAG) để xây dựng chatbot phục vụ tra cứu thông tin, giải đáp thắc mắc cho bệnh nhân giúp giảm tải áp lực cho bộ phận lễ tân và giúp người bệnh được giải đáp các thắc mắc.
+Dự án này là một ví dụ minh họa cách ứng dụng kỹ thuật Retrieval-Augmented Generation (RAG) để xây dựng chatbot phục vụ tra cứu thông tin, giải đáp thắc mắc cho bệnh nhân giúp giảm tải áp lực cho bộ phận lễ tân và giúp người bệnh giải đáp các thắc mắc.
 
 ## Mục tiêu dự án
 
 Trình bày toàn bộ quy trình xây dựng chatbot nội bộ sử dụng kỹ thuật RAG.
 
-Ứng dụng phương pháp embedding vào truy xuất thông tin cần thiết cho câu trả lời nhằm đưa thông tin chính xác đến người cần giải đáp thắc mắc.
+Ứng dụng phương pháp embedding vào truy xuất thông tin cung cấp thông tin chính xác cho người dùng.
 
 Thực hành triển khai mô hình thực tế với công cụ như Langchain, Chroma, và OpenAI Embedding API.
 
