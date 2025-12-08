@@ -1,11 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from bot.chatbot import initialize_components, create_conversation_chain, get_response
+from bot.chatbot import chatbot_response
 
 app = FastAPI()
-
-llm, vectorstore, memory = initialize_components()
-conversation_chain = create_conversation_chain(llm, vectorstore, memory)
 
 class ChatRequest(BaseModel):
     user_input: str
@@ -17,7 +14,7 @@ def home():
 @app.post("/chat")
 def chat(request: ChatRequest):
     try:
-        response = get_response(conversation_chain, vectorstore, request.user_input)
+        response = chatbot_response(request.user_input)
         return {"response": response}
     except Exception as e:
         return {"error": str(e)}
