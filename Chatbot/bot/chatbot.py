@@ -38,3 +38,10 @@ def get_response(conversation_chain, vectorstore, user_input: str):
     response = conversation_chain.invoke(prompt)
     
     return response["answer"]
+
+def chatbot_response(user_input: str):
+    """Get the Chatbot's response to user input."""
+    llm, vectorstore,memory = initialize_components()
+    conversation_chain = create_conversation_chain(llm, vectorstore, memory)
+    response = get_response(conversation_chain, vectorstore, user_input)
+    return response
