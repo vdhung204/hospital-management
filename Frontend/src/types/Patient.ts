@@ -9,7 +9,6 @@ export interface Patient {
   address: string;
 }
 
-// Dùng cho form thêm mới (không cần id và code vì backend tự sinh)
 export interface PatientRequest {
   fullName: string;
   dateOfBirth: string;
@@ -17,4 +16,24 @@ export interface PatientRequest {
   phone: string;
   idNumber: string;
   address: string;
+}
+
+export interface InsuranceCard {
+    id: number;
+    patientId: number;
+    cardNumber: string;
+    provider: string;
+    validFrom: string;
+    validTo: string;
+    coverageRate: number;
+    isPrimary: boolean;
+}
+
+export interface InsuranceCardRequest {
+    cardNumber: string;
+    provider: string;
+    validFrom: string;
+    validTo: string;
+    coverageRate: number;
+    isPrimary: boolean;
 }

@@ -1,5 +1,5 @@
 import axiosClient from '../api/axiosClient';
-import type { Patient, PatientRequest } from '@/types/Patient';
+import type { InsuranceCard, InsuranceCardRequest, Patient, PatientRequest } from '@/types/Patient';
 
 export const patientService = {
   getAll: async () => {
@@ -30,4 +30,20 @@ export const patientService = {
   delete: async (id: number) => {
     await axiosClient.delete(`/patients/${id}`);
   },
+  // Thêm các hàm này vào patientService hoặc tạo insuranceService riêng
+  getInsuranceCards: async (patientId: number) => {
+      const res = await axiosClient.get<InsuranceCard[]>(`/patients/${patientId}/insurance-cards`);
+      return res.data;
+  },
+  addInsuranceCard: async (patientId: number, data: InsuranceCardRequest) => {
+      const res = await axiosClient.post(`/patients/${patientId}/insurance-cards`, data);
+      return res.data;
+  },
+  updateInsuranceCard: async (patientId: number, cardId: number, data: InsuranceCardRequest) => {
+      const res = await axiosClient.put(`/patients/${patientId}/insurance-cards/${cardId}`, data);
+      return res.data;
+  },
+  deleteInsuranceCard: async (patientId: number, cardId: number) => {
+      await axiosClient.delete(`/patients/${patientId}/insurance-cards/${cardId}`);
+  }
 };

@@ -11,6 +11,7 @@ import DoctorExamPage from './pages/doctor/DoctorExamPage';
 import MedicalExamPage from './pages/doctor/MedicalExamPage';
 import TechnicianPage from './pages/technician/TechnicianPage';
 import PharmacyPage from './pages/pharmacy/PharmacyPage';
+import CashierPage from './pages/cashier/CashierPage';
 
 // Import các trang chức năng (tạo placeholder trước)
 const Dashboard = () => <div>Trang Dashboard Thống kê</div>;
@@ -34,6 +35,7 @@ function App() {
             {/* 2. Nhóm route cho Lễ tân */}
             <Route element={<ProtectedRoute allowedRoles={['RECEPTIONIST', 'ADMIN']} />}>
                 <Route path="/reception/patients" element={<PatientPage />} />
+                <Route path="/reception/billing" element={<CashierPage />} />
                 {/* Thêm route thanh toán... */}
             </Route>
 
