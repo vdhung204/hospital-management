@@ -18,6 +18,10 @@ public class InvoiceLineResponse {
     private BigDecimal appliedCoverageRate;
     private Long insuranceCardId;
 
+    private BigDecimal insuranceBaseUnitPrice;
+    private BigDecimal patientCopayAmount;
+    private BigDecimal extraChargeAmount;
+
     // getters/setters
 
     public Long getSourceId() {
@@ -114,5 +118,29 @@ public class InvoiceLineResponse {
 
     public void setInsuranceCardId(Long insuranceCardId) {
         this.insuranceCardId = insuranceCardId;
+    }
+
+    public BigDecimal getExtraChargeAmount() {
+        return extraChargeAmount;
+    }
+
+    public void setExtraChargeAmount(BigDecimal extraChargeAmount) {
+        this.extraChargeAmount = extraChargeAmount;
+    }
+
+    public BigDecimal getPatientCopayAmount() {
+        return patientCopayAmount;
+    }
+
+    public void setPatientCopayAmount(BigDecimal patientCopayAmount) {
+        this.patientCopayAmount = patientCopayAmount;
+    }
+
+    public BigDecimal getInsuranceBaseUnitPrice() {
+        return insuranceBaseUnitPrice;
+    }
+
+    public void setInsuranceBaseUnitPrice(BigDecimal insuranceBaseUnitPrice) {
+        this.insuranceBaseUnitPrice = insuranceBaseUnitPrice;
     }
 }

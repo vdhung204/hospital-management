@@ -45,6 +45,12 @@ public class Invoice {
     @Column(name = "total_patient_amount", nullable = false)
     private BigDecimal totalPatientAmount = BigDecimal.ZERO;
 
+    @Column(name = "total_patient_copay_amount")
+    private BigDecimal totalPatientCopayAmount;
+
+    @Column(name = "total_extra_charge_amount")
+    private BigDecimal totalExtraChargeAmount;
+
     // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -84,5 +90,21 @@ public class Invoice {
 
     public void setTotalPatientAmount(BigDecimal totalPatientAmount) {
         this.totalPatientAmount = totalPatientAmount;
+    }
+
+    public BigDecimal getTotalPatientCopayAmount() {
+        return totalPatientCopayAmount;
+    }
+
+    public void setTotalPatientCopayAmount(BigDecimal totalPatientCopayAmount) {
+        this.totalPatientCopayAmount = totalPatientCopayAmount;
+    }
+
+    public BigDecimal getTotalExtraChargeAmount() {
+        return totalExtraChargeAmount;
+    }
+
+    public void setTotalExtraChargeAmount(BigDecimal totalExtraChargeAmount) {
+        this.totalExtraChargeAmount = totalExtraChargeAmount;
     }
 }

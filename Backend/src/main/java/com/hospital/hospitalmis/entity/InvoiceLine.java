@@ -50,6 +50,18 @@ public class InvoiceLine {
     @JoinColumn(name = "insurance_card_id")
     private InsuranceCard insuranceCard;
 
+    @Column(name = "insurance_base_unit_price")
+    private BigDecimal insuranceBaseUnitPrice;
+
+    @Column(name = "insurance_base_amount")
+    private BigDecimal insuranceBaseAmount;
+
+    @Column(name = "patient_copay_amount")
+    private BigDecimal patientCopayAmount;
+
+    @Column(name = "extra_charge_amount")
+    private BigDecimal extraChargeAmount;
+
     // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -105,5 +117,37 @@ public class InvoiceLine {
 
     public void setInsuranceCard(InsuranceCard insuranceCard) {
         this.insuranceCard = insuranceCard;
+    }
+
+    public BigDecimal getInsuranceBaseUnitPrice() {
+        return insuranceBaseUnitPrice;
+    }
+
+    public void setInsuranceBaseUnitPrice(BigDecimal insuranceBaseUnitPrice) {
+        this.insuranceBaseUnitPrice = insuranceBaseUnitPrice;
+    }
+
+    public BigDecimal getInsuranceBaseAmount() {
+        return insuranceBaseAmount;
+    }
+
+    public void setInsuranceBaseAmount(BigDecimal insuranceBaseAmount) {
+        this.insuranceBaseAmount = insuranceBaseAmount;
+    }
+
+    public BigDecimal getPatientCopayAmount() {
+        return patientCopayAmount;
+    }
+
+    public void setPatientCopayAmount(BigDecimal patientCopayAmount) {
+        this.patientCopayAmount = patientCopayAmount;
+    }
+
+    public BigDecimal getExtraChargeAmount() {
+        return extraChargeAmount;
+    }
+
+    public void setExtraChargeAmount(BigDecimal extraChargeAmount) {
+        this.extraChargeAmount = extraChargeAmount;
     }
 }

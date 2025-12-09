@@ -57,6 +57,7 @@ public class BillingService {
         this.insuranceCardRepository = insuranceCardRepository;
     }
 
+    // ==================== TẠO HÓA ĐƠN ====================
     public InvoiceDetailResponse createInvoice(InvoiceCreateRequest req) {
         Patient patient = patientRepository.findById(req.getPatientId())
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
@@ -76,8 +77,11 @@ public class BillingService {
         invoice.setTotalAmount(BigDecimal.ZERO);
         invoice.setDiscount(req.getDiscount() != null ? req.getDiscount() : BigDecimal.ZERO);
         invoice.setNetAmount(BigDecimal.ZERO);
-        invoice.setTotalInsuranceAmount(BigDecimal.ZERO); // cần field này trong entity
-        invoice.setTotalPatientAmount(BigDecimal.ZERO);   // cần field này trong entity
+        invoice.setTotalInsuranceAmount(BigDecimal.ZERO);
+        invoice.setTotalPatientAmount(BigDecimal.ZERO);
+        invoice.setTotalPatientCopayAmount(BigDecimal.ZERO);
+        invoice.setTotalExtraChargeAmount(BigDecimal.ZERO);
+
 
         Invoice savedInvoice = invoiceRepository.save(invoice);
 
@@ -88,23 +92,23 @@ public class BillingService {
         boolean isInsurance = "INSURANCE".equalsIgnoreCase(payerType);
 
         InsuranceCard insuranceCard = null;
-        BigDecimal coverageRate = BigDecimal.ZERO;
+        BigDecimal coverageRate = BigDecimal.ZERO; // ví dụ: 0.8 = 80%
 
         if (isInsurance) {
             insuranceCard = findActiveInsuranceCardForPatient(patient);
             if (insuranceCard == null) {
-                // Tuỳ anh: hoặc ném lỗi, hoặc fallback sang CASH
                 throw new RuntimeException("No active insurance card for patient " + patient.getPatientCode());
             }
-
-//            coverageRate = insuranceCard.getCoverageRate();
-//            // Nếu anh đang lưu 80.00 = 80% thì:
-            coverageRate = insuranceCard.getCoverageRate().divide(BigDecimal.valueOf(100));
+            // Nếu DB lưu 80.00 = 80% thì chia cho 100
+            coverageRate = insuranceCard.getCoverageRate()
+                    .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
         }
 
         BigDecimal total = BigDecimal.ZERO;
         BigDecimal totalInsurance = BigDecimal.ZERO;
         BigDecimal totalPatient = BigDecimal.ZERO;
+        BigDecimal totalCopay = BigDecimal.ZERO;
+        BigDecimal totalExtra = BigDecimal.ZERO;
 
         if (req.getLines() != null) {
             for (InvoiceLineRequest lineReq : req.getLines()) {
@@ -112,18 +116,65 @@ public class BillingService {
                         .orElseThrow(() -> new RuntimeException("Service item not found"));
 
                 BigDecimal qty = BigDecimal.valueOf(lineReq.getQuantity());
-                BigDecimal unitPrice = findPriceFromTariff(serviceItem.getId(), payerType);
-                BigDecimal lineAmount = unitPrice.multiply(qty);
 
-                BigDecimal insuranceAmount = BigDecimal.ZERO;
-                BigDecimal patientAmount = lineAmount;
+                BigDecimal unitPrice;           // giá dịch vụ (CASH) dùng để hiển thị
+                BigDecimal lineAmount;          // tổng tiền theo giá dịch vụ
+
+                BigDecimal insuranceAmount = BigDecimal.ZERO;    // BH chi trả
+                BigDecimal patientAmount;                        // BN trả tổng
+                BigDecimal insuranceBaseAmount = BigDecimal.ZERO; // tổng giá BH
+                BigDecimal patientCopay = BigDecimal.ZERO;       // BN đồng chi trả trên giá BH
+                BigDecimal extraCharge = BigDecimal.ZERO;        // phụ thu chênh lệch
+                BigDecimal insuranceBaseUnitPrice = null;        // giá BH đơn vị
 
                 if (isInsurance) {
-                    insuranceAmount = lineAmount.multiply(coverageRate)
+                    // ===== Trường hợp có BHYT: mô hình 2 mức giá =====
+
+                    // 1. Giá dịch vụ (CASH) – nếu không có thì fallback sang INSURANCE
+                    BigDecimal priceService;
+                    try {
+                        priceService = findPriceFromTariff(serviceItem.getId(), "CASH");
+                    } catch (RuntimeException e) {
+                        priceService = findPriceFromTariff(serviceItem.getId(), "INSURANCE");
+                    }
+
+                    // 2. Giá BHYT (INSURANCE) – nếu không có thì = giá dịch vụ
+                    try {
+                        insuranceBaseUnitPrice = findPriceFromTariff(serviceItem.getId(), "INSURANCE");
+                    } catch (RuntimeException e) {
+                        insuranceBaseUnitPrice = priceService;
+                    }
+
+                    unitPrice = priceService;
+                    lineAmount = unitPrice.multiply(qty);
+
+                    // Tổng tiền theo giá BHYT
+                    insuranceBaseAmount = insuranceBaseUnitPrice.multiply(qty);
+
+                    // A. BHYT chi trả trên giá BHYT
+                    insuranceAmount = insuranceBaseAmount
+                            .multiply(coverageRate)
                             .setScale(2, RoundingMode.HALF_UP);
-                    patientAmount = lineAmount.subtract(insuranceAmount);
+
+                    // B. BN đồng chi trả phần còn lại trên giá BHYT
+                    patientCopay = insuranceBaseAmount.subtract(insuranceAmount);
+
+                    // C. Phụ thu chênh lệch nếu giá dịch vụ > giá BHYT
+                    if (lineAmount.compareTo(insuranceBaseAmount) > 0) {
+                        extraCharge = lineAmount.subtract(insuranceBaseAmount);
+                    }
+
+                    // D. BN trả tổng = đồng chi trả + chênh lệch
+                    patientAmount = patientCopay.add(extraCharge);
+
+                } else {
+                    // ===== Trường hợp không BHYT: BN trả full theo một loại tariff =====
+                    unitPrice = findPriceFromTariff(serviceItem.getId(), payerType);
+                    lineAmount = unitPrice.multiply(qty);
+                    patientAmount = lineAmount;
                 }
 
+                // ===== Lưu xuống InvoiceLine =====
                 InvoiceLine line = new InvoiceLine();
                 line.setInvoice(savedInvoice);
                 line.setServiceItem(serviceItem);
@@ -133,23 +184,42 @@ public class BillingService {
                 line.setSourceType(lineReq.getSourceType());
                 line.setSourceId(lineReq.getSourceId());
 
-                // các field mới trong entity InvoiceLine
-                line.setInsuranceAmount(insuranceAmount);
-                line.setPatientAmount(patientAmount);
-                line.setAppliedCoverageRate(isInsurance ? coverageRate : null);
-                line.setInsuranceCard(isInsurance ? insuranceCard : null);
+                if (isInsurance) {
+                    line.setInsuranceBaseUnitPrice(insuranceBaseUnitPrice);
+                    line.setInsuranceBaseAmount(insuranceBaseAmount);
+                    line.setInsuranceAmount(insuranceAmount);
+                    line.setPatientCopayAmount(patientCopay);
+                    line.setExtraChargeAmount(extraCharge);
+                    line.setPatientAmount(patientAmount);
+                    line.setAppliedCoverageRate(coverageRate);
+                    line.setInsuranceCard(insuranceCard);
+                } else {
+                    line.setInsuranceBaseUnitPrice(null);
+                    line.setInsuranceBaseAmount(null);
+                    line.setInsuranceAmount(BigDecimal.ZERO);
+                    line.setPatientCopayAmount(null);
+                    line.setExtraChargeAmount(null);
+                    line.setPatientAmount(patientAmount);
+                    line.setAppliedCoverageRate(null);
+                    line.setInsuranceCard(null);
+                }
 
                 invoiceLineRepository.save(line);
 
+                // ===== Cộng dồn lên Invoice =====
                 total = total.add(lineAmount);
                 totalInsurance = totalInsurance.add(insuranceAmount);
                 totalPatient = totalPatient.add(patientAmount);
+                if (patientCopay != null) totalCopay = totalCopay.add(patientCopay);
+                if (extraCharge != null) totalExtra = totalExtra.add(extraCharge);
             }
         }
 
         savedInvoice.setTotalAmount(total);
         savedInvoice.setTotalInsuranceAmount(totalInsurance);
         savedInvoice.setTotalPatientAmount(totalPatient);
+        savedInvoice.setTotalPatientCopayAmount(totalCopay);
+        savedInvoice.setTotalExtraChargeAmount(totalExtra);
 
         BigDecimal discount = savedInvoice.getDiscount() != null
                 ? savedInvoice.getDiscount()
@@ -166,7 +236,7 @@ public class BillingService {
         return getInvoiceDetail(savedInvoice.getId());
     }
 
-
+    // ==================== AUTO INVOICE THEO ENCOUNTER ====================
     public InvoiceDetailResponse createAutoInvoiceForEncounter(Long encounterId, AutoInvoiceRequest req) {
 
         // 1. Lấy encounter & patient
@@ -291,8 +361,7 @@ public class BillingService {
         return createInvoice(createReq);
     }
 
-
-    // --------- Lấy chi tiết 1 hóa đơn ---------
+    // ==================== LẤY CHI TIẾT HÓA ĐƠN ====================
     public InvoiceDetailResponse getInvoiceDetail(Long invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
@@ -329,14 +398,14 @@ public class BillingService {
         return dto;
     }
 
-    // --------- Danh sách hóa đơn theo encounter ---------
+    // ==================== DANH SÁCH HĐ THEO ENCOUNTER ====================
     public List<InvoiceDetailResponse> getInvoicesByEncounter(Long encounterId) {
         return invoiceRepository.findByEncounter_Id(encounterId).stream()
                 .map(i -> getInvoiceDetail(i.getId()))
                 .collect(Collectors.toList());
     }
 
-    // --------- Thêm thanh toán ---------
+    // ==================== THÊM THANH TOÁN ====================
     public InvoiceDetailResponse addPayment(Long invoiceId, PaymentCreateRequest req) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
@@ -371,7 +440,7 @@ public class BillingService {
         return getInvoiceDetail(invoiceId);
     }
 
-    // --------- Mapping helpers ---------
+    // ==================== MAPPING HELPERS ====================
     private InvoiceLineResponse mapInvoiceLineToResponse(InvoiceLine line) {
         InvoiceLineResponse dto = new InvoiceLineResponse();
         dto.setId(line.getId());
@@ -388,6 +457,12 @@ public class BillingService {
         dto.setInsuranceCardId(
                 line.getInsuranceCard() != null ? line.getInsuranceCard().getId() : null
         );
+
+        // Các field mới cho nghiệp vụ 2 mức giá
+        dto.setInsuranceBaseUnitPrice(line.getInsuranceBaseUnitPrice());
+        dto.setPatientCopayAmount(line.getPatientCopayAmount());
+        dto.setExtraChargeAmount(line.getExtraChargeAmount());
+
         return dto;
     }
 
@@ -400,7 +475,8 @@ public class BillingService {
         dto.setRefNumber(p.getRefNumber());
         return dto;
     }
-    // get price effetive
+
+    // ==================== TÌM GIÁ TARIFF ====================
     private BigDecimal findPriceFromTariff(Long serviceItemId, String payerType) {
         LocalDate today = LocalDate.now();
 
@@ -413,6 +489,8 @@ public class BillingService {
         // đơn giản lấy tariff đầu tiên
         return tariffs.get(0).getPrice();
     }
+
+    // ==================== TÌM THẺ BHYT CÓ HIỆU LỰC ====================
     private InsuranceCard findActiveInsuranceCardForPatient(Patient patient) {
         List<InsuranceCard> cards = insuranceCardRepository.findByPatient_Id(patient.getId());
         if (cards == null || cards.isEmpty()) {
@@ -442,6 +520,8 @@ public class BillingService {
                 .findFirst()
                 .orElse(null);
     }
+
+    // ==================== BILLING PREVIEW ====================
     public BillingPreviewResponse getBillingPreview(Long encounterId) {
 
         Encounter encounter = encounterRepository.findById(encounterId)
@@ -588,5 +668,27 @@ public class BillingService {
 
         res.setServices(all);
         return res;
+    }
+
+    // Xóa hóa đơn (Chỉ cho phép xóa nếu chưa thanh toán)
+    public void deleteInvoice(Long invoiceId) {
+        System.out.println("da den service");
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        // Validate: Chỉ được xóa DRAFT
+        if (!"DRAFT".equals(invoice.getStatus())) {
+            throw new RuntimeException("Không thể xóa/tính lại hóa đơn đã phát sinh thanh toán!");
+        }
+        System.out.println("cbi xoa");
+        List<InvoiceLine> lines = invoiceLineRepository.findByInvoice_Id(invoiceId);
+        invoiceLineRepository.deleteAll(lines);
+
+        // 2. Xóa lịch sử thanh toán (nếu có rác)
+        List<Payment> payments = paymentRepository.findByInvoice_Id(invoiceId);
+        paymentRepository.deleteAll(payments);
+        // Do CascadeType.ALL, xóa Invoice sẽ tự xóa InvoiceLine
+        invoiceRepository.delete(invoice);
+        System.out.println("da xoa");
     }
 }

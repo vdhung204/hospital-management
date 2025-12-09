@@ -70,4 +70,11 @@ public class BillingController {
         BillingPreviewResponse res = billingService.getBillingPreview(encounterId);
         return ResponseEntity.ok(res);
     }
+
+    @DeleteMapping("/invoices/{id}")
+    public ResponseEntity<Void> deleteInvoice(@PathVariable Long id) {
+        System.out.println("da den controller");
+        billingService.deleteInvoice(id);
+        return ResponseEntity.noContent().build();
+    }
 }
