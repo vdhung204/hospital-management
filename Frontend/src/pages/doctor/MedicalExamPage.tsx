@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Printer, CheckCircle, Activity, Save } from 'lucide-react';
+import { ChevronLeft, Printer, CheckCircle, Save } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 // Import Services & Types
@@ -14,6 +14,7 @@ import type { ClinicalNote } from '@/types/Encounter';
 import DiagnosisTab from '@/components/medicalExam/DiagnosisTab';
 import PrescriptionTab from '@/components/medicalExam/PrescriptionTab';
 import LabTab from '@/components/medicalExam/LabTab';
+import VitalSignsCard from '@/components/medicalExam/VitalSignsCard';
 
 const MedicalExamPage = () => {
   const { id } = useParams();
@@ -38,47 +39,50 @@ const MedicalExamPage = () => {
   const [prescriptionItems, setPrescriptionItems] = useState<UI_PrescriptionItem[]>([]);
   const [prescriptionStatus, setPrescriptionStatus] = useState('');
   // --- LOAD DATA ---
-  useEffect(() => {
-    const initData = async () => {
-        try {
-            const encData = await encounterService.getDetail(encounterId);
-            setEncounter(encData);
-            const drugData = await medicalService.getAllDrugs();
-            setAllDrugs(drugData);
-            if (encData.status === 'WAITING') {
-                encounterService.updateStatus(encounterId, 'IN_PROGRESS');
-            }
-            if (encData.notes) {
-                console.log(encData.notes);
-                setHistoryNotes(encData.notes);
-            }
-            if (encData.prescriptions && encData.prescriptions.length > 0) {
-                const savedPrescription = encData.prescriptions[0]; 
-                setPrescriptionStatus(savedPrescription.status);
-                if (savedPrescription.items) {
-                    const mappedItems: UI_PrescriptionItem[] = savedPrescription.items.map((item) => ({
-                        tempId: item.id, // Dùng luôn ID thật làm key
-                        drugId: item.drugId,
-                        drugName: item.drugName,
-                        unit: item.form || 'Đv', // Backend trả về 'form' (viên/lọ)
-                        strength: item.strength, // Hàm lượng
-                        quantity: item.quantity,
-                        dose: item.dose,         // Backend lưu 'dose'
-                        usage: item.dose,        // Frontend dùng 'usage' để hiển thị
-                        frequency: item.frequency,
-                        durationDays: item.durationDays
-                    }));
+  // Sử dụng useCallback để ổn định hàm này
+  const initData = useCallback(async () => {
+      if (!encounterId) return; // Kiểm tra an toàn
 
-                    setPrescriptionItems(mappedItems);
-                }
-            }
-        } catch (error) {
-            console.log(error);
-            toast.error('Lỗi tải hồ sơ');
-        }
-    };
-    if (encounterId) initData();
-  }, [encounterId]);
+      try {
+          const encData = await encounterService.getDetail(encounterId);
+          setEncounter(encData);
+          
+          const drugData = await medicalService.getAllDrugs();
+          setAllDrugs(drugData);
+
+          if (encData.status === 'WAITING') {
+              encounterService.updateStatus(encounterId, 'IN_PROGRESS');
+          }
+          if (encData.notes) {
+              setHistoryNotes(encData.notes);
+          }
+          if (encData.prescriptions && encData.prescriptions.length > 0) {
+              const savedPrescription = encData.prescriptions[0]; 
+              setPrescriptionStatus(savedPrescription.status);
+              if (savedPrescription.items) {
+                  const mappedItems: UI_PrescriptionItem[] = savedPrescription.items.map((item) => ({
+                      tempId: item.id,
+                      drugId: item.drugId,
+                      drugName: item.drugName,
+                      unit: item.form || 'Đv',
+                      strength: item.strength,
+                      quantity: item.quantity,
+                      dose: item.dose,
+                      usage: item.dose,
+                      frequency: item.frequency,
+                      durationDays: item.durationDays
+                  }));
+                  setPrescriptionItems(mappedItems);
+              }
+          }
+      } catch (error) {
+          console.log(error);
+          toast.error('Lỗi tải hồ sơ');
+      }
+  }, [encounterId]); // <--- Dependency: Chỉ tạo lại hàm khi encounterId đổi
+  useEffect(() => {
+      initData();
+  }, [initData]);
 
   const handleSave = async (isDraft: boolean = false) => {
     if (!encounter) return;
@@ -133,7 +137,9 @@ const MedicalExamPage = () => {
         toast.error('Lỗi khi lưu');
     }
   };
-
+  const handlePrint= () => {
+    toast.warn("Chức năng đang được phát triển!");
+  }
   if (!encounter) return <div className="p-10 text-center">Đang tải...</div>;
   const { patient } = encounter;
 
@@ -149,7 +155,10 @@ const MedicalExamPage = () => {
           </div>
         </div>
         <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm font-medium"><Printer size={18} /> In phiếu</button>
+            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm font-medium"
+                onClick={() => handlePrint()}
+            >
+                <Printer size={18} /> In phiếu</button>
             {/* Nút Lưu Nháp */}
     <button 
         onClick={() => handleSave(true)} // Truyền true
@@ -183,17 +192,20 @@ const MedicalExamPage = () => {
                 <div className="flex justify-between"><span className="text-gray-500">Địa chỉ</span> <span className="font-medium truncate max-w-[150px]">{patient.address}</span></div>
              </div>
           </div>
-          {/* Card Sinh hiệu... */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-             <h4 className="font-bold text-gray-700 mb-3 flex gap-2 items-center"><Activity size={18} className="text-teal-600"/> Sinh hiệu</h4>
-             {/* ... Code hiển thị sinh hiệu như cũ ... */}
-             <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-gray-50 p-2 rounded"><span className="text-xs text-gray-500 block">Mạch</span><span className="font-bold text-gray-800">{encounter.pulse || '--'}</span></div>
-                <div className="bg-gray-50 p-2 rounded"><span className="text-xs text-gray-500 block">Huyết áp</span><span className="font-bold text-gray-800">{encounter.bloodPressure || '--'}</span></div>
-                <div className="bg-gray-50 p-2 rounded"><span className="text-xs text-gray-500 block">Nhiệt độ</span><span className="font-bold text-gray-800">{encounter.temperature || '--'}°C</span></div>
-                <div className="bg-gray-50 p-2 rounded"><span className="text-xs text-gray-500 block">Cân nặng</span><span className="font-bold text-gray-800">{encounter.weight || '--'}kg</span></div>
-             </div>
-          </div>
+           <VitalSignsCard 
+               encounterId={encounterId}
+               initialData={{
+                   height: encounter.height,
+                   weight: encounter.weight,
+                   temperature: encounter.temperature,
+                   pulse: encounter.pulse,
+                   bloodPressure: encounter.bloodPressure
+               }}
+               onUpdate={() => {
+                   // Khi Card lưu thành công, nó gọi hàm này để load lại dữ liệu mới nhất
+                   initData(); 
+               }}
+           />
         </div>
 
         {/* CỘT PHẢI: GỌI CÁC TAB COMPONENT */}

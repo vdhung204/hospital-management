@@ -1,6 +1,6 @@
 
 import axiosClient from '../api/axiosClient';
-import type { Department, EncounterCreateRequest, EncounterDetail, EncounterResponse, Staff } from '@/types/Encounter';
+import type { Department, EncounterCreateRequest, EncounterDetail, EncounterResponse, EncounterVitalsUpdate, Staff } from '@/types/Encounter';
 
 export const encounterService = {
   create: async (data: EncounterCreateRequest) => {
@@ -43,5 +43,19 @@ export const encounterService = {
     const response = await axiosClient.get(`/encounters/${encounterId}/diagnoses`);
     return response.data;
   },
+  updateVitals: async (id: number, data: EncounterVitalsUpdate) => {
+        const res = await axiosClient.patch(`/encounters/${id}/vitals`, data);
+        return res.data;
+    },
 
+    // PORTAL
+    getHistory: async () => {
+        const res = await axiosClient.get('/portal/encounters');
+        return res.data;
+    },
+    // Lấy chi tiết lịch sử khám 
+    getDetailForPatient: async (id: number) => {
+        const res = await axiosClient.get(`/portal/encounters/${id}`);
+        return res.data;
+    }
 };

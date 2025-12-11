@@ -2,7 +2,7 @@ import type { PrescriptionResponse} from "./MedicalExam";
 export interface EncounterCreateRequest {
   patientId: number;
   departmentId: number;
-  doctorId: number;
+  doctorId?: number;
   encounterType: string; 
   
   height?: number;
@@ -37,7 +37,13 @@ export interface PatientSummary {
   gender: string;
   address: string;
 }
-
+export interface EncounterVitalsUpdate {
+    height?: number;
+    weight?: number;
+    temperature?: number;
+    pulse?: number;
+    bloodPressure?: string;
+}
 export interface EncounterDetail {
   id: number;
   visitDate: string;

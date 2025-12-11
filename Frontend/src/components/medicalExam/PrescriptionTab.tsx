@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Trash2, Pill, Plus,ShoppingBag } from 'lucide-react';
+import { Search, Trash2, Pill, Plus,ShoppingBag, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import type { Drug, UI_PrescriptionItem } from '@/types/MedicalExam';
 
@@ -75,6 +75,10 @@ const PrescriptionTab = ({ allDrugs, items, setItems,prescriptionStatus }: Props
 
   // 3. Xóa thuốc khỏi đơn
   const handleRemove = (tempId: number) => {
+    if (prescriptionStatus === 'DONE') {
+        toast.warning('Đơn thuốc đã hoàn thành/đã phát, không thể xóa thuốc!');
+        return;
+    }
     setItems(prev => prev.filter(i => i.tempId !== tempId));
   };
 
@@ -82,7 +86,14 @@ const PrescriptionTab = ({ allDrugs, items, setItems,prescriptionStatus }: Props
     <div className="flex h-full gap-6">
       
       {/* --- CỘT TRÁI: TÌM KIẾM & NHẬP LIỆU --- */}
-      <div className="w-[400px] flex-shrink-0 flex flex-col gap-4">
+      {prescriptionStatus === 'DONE' ? (
+    <div className="w-[400px] bg-green-50 border border-green-200 rounded-xl p-6 text-center text-green-800">
+        <CheckCircle size={48} className="mx-auto mb-3 text-green-600"/>
+        <h3 className="font-bold text-lg">Đơn thuốc đã hoàn tất</h3>
+        <p className="text-sm mt-1">Không thể chỉnh sửa đơn thuốc này.</p>
+    </div>
+) : (
+    <div className="w-[400px] flex-shrink-0 flex flex-col gap-4">
         
         {/* Card Tìm kiếm */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col relative z-20">
@@ -171,6 +182,8 @@ const PrescriptionTab = ({ allDrugs, items, setItems,prescriptionStatus }: Props
             </div>
         )}
       </div>
+)}
+      
 
       {/* --- CỘT PHẢI: DANH SÁCH ĐƠN THUỐC --- */}
       <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
@@ -181,12 +194,12 @@ const PrescriptionTab = ({ allDrugs, items, setItems,prescriptionStatus }: Props
             {items.length > 0 && (
                 <span
                     className={`text-xs px-2 py-1 rounded-full font-bold ${
-                    prescriptionStatus === 'ACTIVE'
-                        ? 'text-orange-600 bg-orange-100' // Active: Cam
-                        : 'text-green-600 bg-green-100'   // Đã xong: Xanh lá
+                    prescriptionStatus === 'DONE'
+                        ? 'text-green-600 bg-green-100' // Active: Cam
+                        : 'text-orange-600 bg-orange-100'  // Đã xong: Xanh lá
                     }`}
                 >
-                    {prescriptionStatus === 'ACTIVE' ? 'Đang cấp thuốc' : 'Đã xong'}
+                    {prescriptionStatus === 'DONE' ? 'Đã xong' : 'Đang cấp thuốc'}
                 </span>
                 )}
          </div>

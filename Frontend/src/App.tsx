@@ -7,14 +7,22 @@ import MainLayout from '@/layout/MainLayout'
 import ProtectedRoute from '@/components/ProtectedRouter'
 import PatientPage from '@/pages/reception/PatientPage';
 import DoctorQueuePage from './pages/doctor/DoctorQueuePage';
-import DoctorExamPage from './pages/doctor/DoctorExamPage';
 import MedicalExamPage from './pages/doctor/MedicalExamPage';
 import TechnicianPage from './pages/technician/TechnicianPage';
 import PharmacyPage from './pages/pharmacy/PharmacyPage';
 import CashierPage from './pages/cashier/CashierPage';
+import DashboardPage from './pages/admin/DashboardPage';
+import ServiceManagementPage from './pages/manager/ServiceManagementPage';
+import StaffPage from './pages/manager/StaffPage';
+import InboundPage from './pages/pharmacy/InboundPage';
+import AppointmentPage from './pages/reception/AppointmentPage';
+import PatientLayout from './layout/PatientLayout';
+import PortalDashboard from './pages/portal/PortalDashboard';
+import PortalBooking from './pages/portal/PortalBooking';
+import PortalHistoryDetail from './pages/portal/PortalHistoryDetail';
+import PortalHistory from './pages/portal/PortalHistory';
 
 // Import các trang chức năng (tạo placeholder trước)
-const Dashboard = () => <div>Trang Dashboard Thống kê</div>;
 const Settings = () => <div>Trang Cấu hình Admin</div>;
 
 function App() {
@@ -30,11 +38,12 @@ function App() {
         <Route element={<MainLayout />}>
             
             {/* 1. Dashboard: Ai login rồi cũng vào được */}
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             
             {/* 2. Nhóm route cho Lễ tân */}
             <Route element={<ProtectedRoute allowedRoles={['RECEPTIONIST', 'ADMIN']} />}>
                 <Route path="/reception/patients" element={<PatientPage />} />
+                <Route path="/reception/appointments" element={<AppointmentPage />} />
                 <Route path="/reception/billing" element={<CashierPage />} />
                 {/* Thêm route thanh toán... */}
             </Route>
@@ -42,7 +51,6 @@ function App() {
             {/* 3. Nhóm route cho Bác sĩ */}
             <Route element={<ProtectedRoute allowedRoles={['DOCTOR', 'ADMIN']} />}>
                 <Route path="/doctor/queue" element={<DoctorQueuePage />} />
-                <Route path="/doctor/exam1/:id" element={<DoctorExamPage />} />
                 <Route path="/doctor/exam/:id" element={<MedicalExamPage />} />
                 
             </Route>
@@ -53,15 +61,23 @@ function App() {
             {/* 4. Nhóm route cho Dược sĩ */}
             <Route element={<ProtectedRoute allowedRoles={['PHARMACIST', 'ADMIN']} />}>
                 <Route path="/pharmacy" element={<PharmacyPage />} />
+                <Route path="/inbound" element={<InboundPage />} />
             </Route>
 
             {/* 5. Nhóm route Admin */}
             <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
                 <Route path="/admin/settings" element={<Settings />} />
+                <Route path="/admin/services" element={<ServiceManagementPage />} />
+                <Route path="/admin/staffs" element={<StaffPage />} />
             </Route>
-
         </Route>
-
+        {/* Patient Portal Routes */}
+        <Route path="/portal" element={<PatientLayout />}>
+          <Route path="dashboard" element={<PortalDashboard />} />
+          <Route path="booking" element={<PortalBooking />} />
+          <Route path="history" element={<PortalHistory />} />
+          <Route path="history/:id" element={<PortalHistoryDetail />} />
+        </Route>
         {/* Mặc định */}
         <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="*" element={<div>404 Not Found</div>} />

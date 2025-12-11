@@ -1,18 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { MENU_ITEMS } from '../config/menuConfig';
-import { LogOut, Search, Bell, Menu } from 'lucide-react';
+import { LogOut, Search, Bell, Menu, ChevronDown, ChevronRight } from 'lucide-react';
 import type { UserInfo } from '../types/auth';
 import Logo from '@/assets/images/Logo.png';
-// Lưu ý: Nếu bạn chưa có file ảnh, hãy dùng đường dẫn tạm hoặc comment dòng này lại
-// import Logo from '@/assets/images/Logo.png'; 
-// Thay thế import Logo bằng đường dẫn tương đối hoặc URL tạm để tránh lỗi biên dịch khi xem trước
-//const Logo = "https://cdn-icons-png.flaticon.com/512/3063/3063823.png"; 
 
 const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>('Quản lý danh mục');
   const [user] = useState<UserInfo | null>(() => {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
@@ -23,7 +19,9 @@ const MainLayout = () => {
       navigate('/login');
     }
   }, [user, navigate]);
-
+  const toggleSubmenu = (path: string) => {
+    setOpenSubmenu(prev => prev === path ? null : path);
+  };
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = '/login'; 
@@ -43,7 +41,6 @@ const MainLayout = () => {
     <div className="flex h-screen bg-slate-50 font-sans text-slate-800">
       {/* --- SIDEBAR --- */}
       <aside className="w-64 bg-white shadow-xl flex-col hidden md:flex z-20">
-        {/* Logo Area */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100">
           <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-white shadow-sm border border-slate-100 p-1">
              <img src={Logo} alt="Logo" className="h-full w-full object-contain" />
@@ -54,16 +51,78 @@ const MainLayout = () => {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
           {filteredMenu.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname.startsWith(item.path);
+            // const isActive = location.pathname.startsWith(item.path);
             
+            // return (
+            //   <Link
+            //     key={item.path}
+            //     to={item.path}
+            //     className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+            //       isActive 
+            //         ? 'bg-teal-50 text-teal-700 font-semibold shadow-sm' 
+            //         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            //     }`}
+            //   >
+            //     <Icon size={20} className={`transition-colors ${isActive ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+            //     <span className="text-sm">{item.title}</span>
+            //     {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-teal-500"></div>}
+            //   </Link>
+            // );
+            // TRƯỜNG HỢP 1: MENU CÓ CON (DROPDOWN)
+            if (item.children && item.children.length > 0) {
+                const isOpen = openSubmenu === item.path;
+                // Kiểm tra xem trang hiện tại có thuộc menu con này không để highlight cha
+                const isChildActive = item.children.some(child => location.pathname.startsWith(child.path!));
+
+                return (
+                    <div key={item.path} className="mb-1">
+                        <button
+                            onClick={() => toggleSubmenu(item.path!)}
+                            className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer ${
+                                isChildActive ? 'bg-teal-50 text-teal-800 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Icon size={20} className={`transition-colors ${isChildActive ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                                <span className="text-sm">{item.title}</span>
+                            </div>
+                            {isOpen ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
+                        </button>
+
+                        {/* Render Menu Con */}
+                        {isOpen && (
+                            <div className="mt-1 ml-4 border-l-2 border-slate-100 pl-2 space-y-1">
+                                {item.children.map(child => {
+                                    const isSubActive = location.pathname.startsWith(child.path!);
+                                    return (
+                                        <Link
+                                            key={child.path}
+                                            to={child.path!}
+                                            className={`block px-3 py-2 rounded-lg text-sm transition-all ${
+                                                isSubActive 
+                                                ? 'text-teal-600 font-bold bg-white shadow-sm' 
+                                                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            {child.title}
+                                        </Link>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // TRƯỜNG HỢP 2: MENU ĐƠN (NHƯ CŨ)
+            const isActive = location.pathname.startsWith(item.path!);
             return (
               <Link
                 key={item.path}
-                to={item.path}
+                to={item.path!}
                 className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                   isActive 
                     ? 'bg-teal-50 text-teal-700 font-semibold shadow-sm' 
@@ -78,7 +137,6 @@ const MainLayout = () => {
           })}
         </nav>
 
-        {/* Logout Area */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">
           <button 
             onClick={handleLogout}

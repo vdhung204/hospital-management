@@ -3,9 +3,13 @@ export interface Drug {
   id: number;
   code: string;
   name: string;
+  activeIngredient: string;
+  usageUnit: string;
   form: string;     
   strength: string; 
   quantityOnHand?: number; 
+  serviceItemId: number;
+  isActive: boolean;
 }
 export interface PrescriptionItemRequest {
   drugId: number;
@@ -51,6 +55,7 @@ export interface ServiceItem {
   name: string;
   serviceType: 'LAB' | 'IMG' | 'OTHER';
   price?: number;
+  isActive: boolean;
 }
 
 export interface ClinicalOrder {

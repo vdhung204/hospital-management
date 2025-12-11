@@ -31,9 +31,20 @@ const LoginPage = () => {
         staffId: data.staffId,
         roles: data.roles
       }));
+      const roles = data.roles || [];
 
-      toast.success(`Xin chào, ${data.fullName}!`);
-      navigate('/dashboard'); 
+        if (roles.includes('ROLE_PATIENT')) {
+            // 1. Nếu là BỆNH NHÂN -> Vào Portal
+            navigate('/portal/dashboard');
+        } else if (roles.some(r => ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_RECEPTIONIST'].includes(r))) {
+            // 2. Nếu là NHÂN VIÊN -> Vào trang Admin/Doctor
+            navigate('/'); // Hoặc '/admin/dashboard' tùy router của bạn
+        } else {
+            // Trường hợp khác
+            navigate('/');
+        }
+        
+        toast.success('Đăng nhập thành công');
 
     } catch (error) {
     console.error(error);
