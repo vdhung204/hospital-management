@@ -1,0 +1,12 @@
+chromadb
+openai
+python-dotenv
+langchain
+langchain_community
+pypdf
+gradio
+fastapi
+uvicorn
+docx
+huggingface-hub
+sentence-transformers
