@@ -73,12 +73,21 @@ public class EncounterDetailService {
         dto.setStatus(enc.getStatus());
         dto.setDoctorId(enc.getDoctorId());
         dto.setQueueNumber(enc.getQueueNumber());
-        dto.setHeight(enc.getHeight());
-        dto.setWeight(enc.getWeight());
-        dto.setBloodPressure(enc.getBloodPressure());
-        dto.setTemperature(enc.getTemperature());
-        dto.setPulse(enc.getPulse());
-
+        if(enc.getHeight() != null) {
+            dto.setHeight(enc.getHeight());
+        }
+        if(enc.getWeight() != null) {
+            dto.setWeight(enc.getWeight());
+        }
+        if(enc.getBloodPressure() != null) {
+            dto.setBloodPressure(enc.getBloodPressure());
+        }
+        if(enc.getPulse() != null) {
+            dto.setPulse(enc.getPulse());
+        }
+        if(enc.getTemperature() != null) {
+            dto.setTemperature(enc.getTemperature());
+        }
         // -------- Patient summary ----------
         if (enc.getPatient() != null) {
             EncounterDetailResponse.PatientSummary p = new EncounterDetailResponse.PatientSummary();

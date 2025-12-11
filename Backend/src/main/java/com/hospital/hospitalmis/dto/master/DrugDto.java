@@ -5,6 +5,7 @@ public class DrugDto {
     private Long id;
     private String code;
     private String name;
+    private String activeIngredient;
     private String form;
     private String strength;
 
@@ -36,4 +37,12 @@ public class DrugDto {
 
     public String getServiceItemName() { return serviceItemName; }
     public void setServiceItemName(String serviceItemName) { this.serviceItemName = serviceItemName; }
+
+    public String getActiveIngredient() {
+        return activeIngredient;
+    }
+
+    public void setActiveIngredient(String activeIngredient) {
+        this.activeIngredient = activeIngredient;
+    }
 }

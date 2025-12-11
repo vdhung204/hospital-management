@@ -4,6 +4,7 @@ import com.hospital.hospitalmis.entity.Prescription;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PrescriptionRepository extends JpaRepository<Prescription, Long> {
@@ -13,4 +14,6 @@ public interface PrescriptionRepository extends JpaRepository<Prescription, Long
 
     @Query("SELECT p FROM Prescription p WHERE p.status = 'ACTIVE' ORDER BY p.createdAt DESC")
     List<Prescription> findPendingPrescriptions();
+
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 }

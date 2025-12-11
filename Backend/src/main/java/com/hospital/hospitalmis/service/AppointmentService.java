@@ -22,10 +22,11 @@ public interface AppointmentService {
             LocalDate toDate,
             String status
     );
-
+    List<AppointmentDetailDto> getUpcomingByPatient(Long patientId);
     AppointmentDetailDto cancel(Long id);
 
     AppointmentDetailDto markDone(Long id);  // DONE theo status trong DB
     AppointmentDetailDto createForPatientByDoctor(Long patientId, Long doctorId, LocalDateTime scheduledAt);
 
+    Long checkIn(Long id);
 }

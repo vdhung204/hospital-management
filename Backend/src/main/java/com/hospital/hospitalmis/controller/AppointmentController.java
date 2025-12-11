@@ -85,6 +85,12 @@ public class AppointmentController {
 
         return ua.getPatientId();
     }
+    // Thêm API này để Lễ tân bấm "Tiếp đón"
+    @PostMapping("/{id}/check-in")
+    public ResponseEntity<Long> checkIn(@PathVariable Long id) {
+        // Trả về encounterId vừa tạo
+        return ResponseEntity.ok(appointmentService.checkIn(id));
+    }
 
     @PostMapping("/{id}/cancel")
     public ResponseEntity<AppointmentDetailDto> cancel(@PathVariable Long id) {

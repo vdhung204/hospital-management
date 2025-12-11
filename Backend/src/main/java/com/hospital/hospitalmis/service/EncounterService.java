@@ -1,6 +1,7 @@
 package com.hospital.hospitalmis.service;
 
 import com.hospital.hospitalmis.dto.*;
+import com.hospital.hospitalmis.dto.encounter.EncounterVitalsUpdate;
 import com.hospital.hospitalmis.entity.*;
 import com.hospital.hospitalmis.repository.*;
 import com.hospital.hospitalmis.repository.EncounterRepository;
@@ -80,11 +81,11 @@ public class EncounterService {
         enc.setIsDeleted(false);
         enc.setQueueNumber(nextQueue);
         enc.setAppointment(appt);
-        enc.setHeight(req.getHeight());
-        enc.setWeight(req.getWeight());
-        enc.setTemperature(req.getTemperature());
-        enc.setBloodPressure(req.getBloodPressure());
-        enc.setPulse(req.getPulse());
+//        enc.setHeight(req.getHeight());
+//        enc.setWeight(req.getWeight());
+//        enc.setTemperature(req.getTemperature());
+//        enc.setBloodPressure(req.getBloodPressure());
+//        enc.setPulse(req.getPulse());
 
         Encounter saved = encounterRepository.save(enc);
         return mapToResponse(saved);
@@ -140,15 +141,34 @@ public class EncounterService {
         dto.setEncounterType(enc.getEncounterType());
         dto.setVisitDate(enc.getVisitDate());
         dto.setStatus(enc.getStatus());
-        dto.setHeight(enc.getHeight());
-        dto.setWeight(enc.getWeight());
         dto.setQueueNumber(enc.getQueueNumber());
-        dto.setBloodPressure(enc.getBloodPressure());
-        dto.setPulse(enc.getPulse());
-
+        if(enc.getHeight() != null) {
+            dto.setHeight(enc.getHeight());
+        }
+        if(enc.getWeight() != null) {
+            dto.setWeight(enc.getWeight());
+        }
+        if(enc.getBloodPressure() != null) {
+            dto.setBloodPressure(enc.getBloodPressure());
+        }
+        if(enc.getPulse() != null) {
+            dto.setPulse(enc.getPulse());
+        }
+        if(enc.getTemperature() != null) {
+            dto.setTemperature(enc.getTemperature());
+        }
         return dto;
     }
 
+    public List<EncounterResponse> getHistoryByPatient(Long patientId) {
+        // Gọi Repo
+        List<Encounter> list = encounterRepository.findByPatientIdOrderByVisitDateDesc(patientId);
+
+        // Convert sang DTO
+        return list.stream()
+                .map(this::mapToResponse) // Sử dụng hàm toDetailDto đã có sẵn
+                .toList();
+    }
     //create clinical note
     public ClinicalNoteResponse addNote(Long encounterId, ClinicalNoteCreateRequest req) {
         Encounter enc = encounterRepository.findById(encounterId)
@@ -198,35 +218,21 @@ public class EncounterService {
         EncounterDiagnosis saved = encounterDiagnosisRepository.save(diag);
         return mapDiagToResponse(saved);
     }
-    // create diagnosis (Lưu từng cái một theo ý bạn)
-//    public DiagnosisResponse addDiagnosis(Long encounterId, DiagnosisRequest req) {
-//        // 1. Kiểm tra đầu vào
-//        if (req.getIcd10Code() == null || req.getIcd10Code().trim().isEmpty()) {
-//            throw new RuntimeException("Mã ICD-10 không được để trống");
-//        }
-//
-//        // 2. Tìm Encounter
-//        Encounter enc = encounterRepository.findById(encounterId)
-//                .orElseThrow(() -> new RuntimeException("Encounter not found id=" + encounterId));
-//
-//        // 3. Tìm ICD10 (QUAN TRỌNG: Thêm .trim() để cắt khoảng trắng thừa)
-//        String cleanCode = req.getIcd10Code().trim();
-//        ICD10Code icd = icd10CodeRepository.findById(cleanCode)
-//                .orElseThrow(() -> new RuntimeException("Mã ICD-10 không tồn tại trong danh mục: " + cleanCode));
-//
-//        System.out.println(">>> Đã tìm thấy ICD: " + icd.getName()); // Debug log
-//
-//        // 4. Tạo Object
-//        EncounterDiagnosis diag = new EncounterDiagnosis();
-//        diag.setEncounter(enc);
-//        diag.setIcd10Code(icd);
-//        diag.setIsPrimary(req.getPrimary() != null ? req.getPrimary() : false);
-//
-//        // 5. Lưu (Dùng saveAndFlush để ép lưu ngay lập tức, bắt lỗi DB nếu có)
-//        EncounterDiagnosis saved = encounterDiagnosisRepository.saveAndFlush(diag);
-//
-//        return mapDiagToResponse(saved);
-//    }
+
+    public EncounterResponse updateVitals(Long id, EncounterVitalsUpdate req) {
+        Encounter enc = encounterRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Encounter not found"));
+
+        // Chỉ update nếu giá trị gửi lên khác null (Logic PATCH chuẩn)
+        if (req.getHeight() != null) enc.setHeight(req.getHeight());
+        if (req.getWeight() != null) enc.setWeight(req.getWeight());
+        if (req.getTemperature() != null) enc.setTemperature(req.getTemperature());
+        if (req.getPulse() != null) enc.setPulse(req.getPulse());
+        if (req.getBloodPressure() != null) enc.setBloodPressure(req.getBloodPressure());
+
+        Encounter saved = encounterRepository.save(enc);
+        return mapToResponse(saved);
+    }
 
     public List<DiagnosisResponse> getDiagnosesByEncounter(Long encounterId) {
         return encounterDiagnosisRepository.findByEncounter_Id(encounterId).stream()

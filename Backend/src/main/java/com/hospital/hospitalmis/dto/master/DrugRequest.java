@@ -4,6 +4,7 @@ public class DrugRequest {
 
     private String code;
     private String name;
+    private String activeIngredient;
     private String form;
     private String strength;
     private Long serviceItemId;
@@ -23,4 +24,12 @@ public class DrugRequest {
 
     public Long getServiceItemId() { return serviceItemId; }
     public void setServiceItemId(Long serviceItemId) { this.serviceItemId = serviceItemId; }
+
+    public String getActiveIngredient() {
+        return activeIngredient;
+    }
+
+    public void setActiveIngredient(String activeIngredient) {
+        this.activeIngredient = activeIngredient;
+    }
 }

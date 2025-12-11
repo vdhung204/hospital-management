@@ -20,4 +20,16 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
             "WHERE i.status = 'PAID' AND i.createdAt " +
             "BETWEEN :start AND :end")
     BigDecimal sumRevenue(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // Tính tổng doanh thu thực thu (Net Amount) của các hóa đơn đã thanh toán trong ngày
+    @Query("SELECT SUM(i.netAmount) FROM Invoice i " +
+            "WHERE i.createdAt BETWEEN :start AND :end " +
+            "AND i.status IN ('PAID', 'PARTIAL')")
+    BigDecimal sumTotalRevenue(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // Tính tổng tiền BHYT chi trả trong ngày (để so sánh)
+    @Query("SELECT SUM(i.totalInsuranceAmount) FROM Invoice i " +
+            "WHERE i.createdAt BETWEEN :start AND :end " +
+            "AND i.status IN ('PAID', 'PARTIAL')")
+    BigDecimal sumInsuranceRevenue(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

@@ -40,4 +40,9 @@ public interface EncounterRepository extends JpaRepository<Encounter, Long> {
     List<Encounter> findDoctorQueue(@Param("doctorId") Long doctorId,
                                     @Param("start") LocalDateTime start,
                                     @Param("end") LocalDateTime end);
+
+    long countByVisitDateBetween(LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    long countByStatus(String inProgress);
+    List<Encounter> findByPatientIdOrderByVisitDateDesc(Long patientId);
 }

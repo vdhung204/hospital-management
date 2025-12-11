@@ -45,8 +45,9 @@ public class Encounter {
     private Double weight;
     private Double temperature;
 
-    @Column(name = "blood_pressure")
+    @Column(name = "blood_pressure",nullable = true)
     private String bloodPressure;
+    @Column(name = "pulse",nullable = true)
     private Integer pulse;
 
     // Link với Appointment

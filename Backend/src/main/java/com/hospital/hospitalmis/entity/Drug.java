@@ -18,6 +18,9 @@ public class Drug {
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
+    @Column(name = "active_ingredient")
+    private String activeIngredient;
+
     // form VARCHAR(50) NULL
     @Column(name = "form", length = 50)
     private String form;     // dạng bào chế: viên, ống, gói...
@@ -55,4 +58,12 @@ public class Drug {
 
     public ServiceItem getServiceItem() { return serviceItem; }
     public void setServiceItem(ServiceItem serviceItem) { this.serviceItem = serviceItem; }
+
+    public String getActiveIngredient() {
+        return activeIngredient;
+    }
+
+    public void setActiveIngredient(String activeIngredient) {
+        this.activeIngredient = activeIngredient;
+    }
 }

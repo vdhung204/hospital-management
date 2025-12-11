@@ -80,7 +80,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public PrescriptionDetailDto createPrescription(Long encounterId, PrescriptionCreateRequest request) {
         Prescription prescription = prescriptionRepository.findByEncounter_Id(encounterId)
                 .stream()
-                .filter(p -> "ACTIVE".equals(p.getStatus()))
                 .findFirst()
                 .orElse(null);
 
@@ -102,6 +101,9 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             prescription.setStatus("ACTIVE");
             prescription = prescriptionRepository.save(prescription);
         } else {
+            if(prescription.getStatus().equals("DONE")) {
+                return toDetailDto(prescription);
+            }
             prescription.getItems().clear();
             prescription.setCreatedAt(LocalDateTime.now());
         }

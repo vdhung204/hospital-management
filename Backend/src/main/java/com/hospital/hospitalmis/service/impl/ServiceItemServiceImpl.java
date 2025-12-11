@@ -72,7 +72,7 @@ public class ServiceItemServiceImpl implements ServiceItemService {
     public List<ServiceItemDto> getAll() {
         return serviceItemRepository.findAll()
                 .stream()
-                .map(s -> toDto(s, false))
+                .map(s -> toDto(s, true))
                 .toList();
     }
 

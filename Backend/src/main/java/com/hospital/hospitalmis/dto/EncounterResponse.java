@@ -24,6 +24,7 @@ public class EncounterResponse {
     private Double height;
     private Double weight;
     private String bloodPressure;
+    private Double temperature;
     private int pulse;
     // getters/setters
     public Long getId() { return id; }
@@ -110,5 +111,13 @@ public class EncounterResponse {
 
     public void setPulse(int pulse) {
         this.pulse = pulse;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
     }
 }

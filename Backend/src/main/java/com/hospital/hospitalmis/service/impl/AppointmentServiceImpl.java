@@ -21,15 +21,18 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final PatientRepository patientRepository;
     private final DepartmentRepository departmentRepository;
     private final StaffRepository staffRepository;
+    private final EncounterRepository encounterRepository;
 
     public AppointmentServiceImpl(AppointmentRepository appointmentRepository,
                                   PatientRepository patientRepository,
                                   DepartmentRepository departmentRepository,
-                                  StaffRepository staffRepository) {
+                                  StaffRepository staffRepository,
+                                  EncounterRepository encounterRepository) {
         this.appointmentRepository = appointmentRepository;
         this.patientRepository = patientRepository;
         this.departmentRepository = departmentRepository;
         this.staffRepository = staffRepository;
+        this.encounterRepository = encounterRepository;
     }
 
     @Override
@@ -98,6 +101,51 @@ public class AppointmentServiceImpl implements AppointmentService {
                     return geFrom && leTo;
                 })
                 .map(this::toListItem)
+                .toList();
+    }
+
+    // ... inject thêm EncounterRepository vào constructor ...
+
+    @Override
+    public Long checkIn(Long id) {
+        Appointment appt = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (!"SCHEDULED".equals(appt.getStatus())) {
+            throw new RuntimeException("Chỉ có thể tiếp đón lịch hẹn đang chờ (SCHEDULED)");
+        }
+
+        // 1. Tạo Encounter (Ca khám) từ thông tin Lịch hẹn
+        Encounter enc = new Encounter();
+        enc.setPatient(appt.getPatient());
+        enc.setDepartment(appt.getDepartment());
+        enc.setDoctorId(appt.getDoctor().getId()); // Nếu lúc đặt lịch đã chọn bác sĩ
+        enc.setVisitDate(LocalDateTime.now()); // Thời gian thực tế đến
+        enc.setStatus("WAITING"); // Đưa vào hàng chờ của bác sĩ
+        enc.setEncounterType("OPD"); // Mặc định Ngoại trú
+
+        // enc.setAppointmentId(appt.getId()); // Nếu bảng Encounter có cột này (Optional)
+
+        Encounter savedEnc = encounterRepository.save(enc);
+
+        // 2. Cập nhật trạng thái Lịch hẹn -> COMPLETED
+        appt.setStatus("COMPLETED");
+        appointmentRepository.save(appt);
+
+        return savedEnc.getId();
+    }
+    @Override
+    public List<AppointmentDetailDto> getUpcomingByPatient(Long patientId) {
+        // Lấy thời điểm hiện tại
+        LocalDateTime now = LocalDateTime.now();
+
+        // Gọi Repo lấy lịch > now
+        List<Appointment> list = appointmentRepository.findByPatientIdAndScheduledAtAfterOrderByScheduledAtAsc(patientId, now);
+
+        // Convert sang DTO (Lọc bỏ các lịch đã Cancel nếu muốn)
+        return list.stream()
+                .filter(a -> !"CANCELLED".equals(a.getStatus())) // Tùy chọn: Ẩn lịch đã hủy
+                .map(this::toDetailDto) // Sử dụng hàm toDetailDto đã có sẵn trong class này
                 .toList();
     }
 

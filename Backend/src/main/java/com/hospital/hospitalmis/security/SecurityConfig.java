@@ -70,7 +70,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of("http://localhost:5173"));
 
         // Cho phép các method
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
 
         // Cho phép mọi header (Authorization, Content-Type...)
         config.setAllowedHeaders(List.of("*"));

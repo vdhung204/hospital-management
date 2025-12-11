@@ -30,6 +30,7 @@ public class DrugServiceImpl implements DrugService {
         dto.setId(d.getId());
         dto.setCode(d.getCode());
         dto.setName(d.getName());
+        dto.setActiveIngredient(d.getActiveIngredient());
         dto.setForm(d.getForm());
         dto.setStrength(d.getStrength());
 
@@ -72,6 +73,7 @@ public class DrugServiceImpl implements DrugService {
         Drug d = new Drug();
         d.setCode(request.getCode());
         d.setName(request.getName());
+        d.setActiveIngredient(request.getActiveIngredient());
         d.setForm(request.getForm());
         d.setStrength(request.getStrength());
         d.setServiceItem(si);
@@ -95,6 +97,7 @@ public class DrugServiceImpl implements DrugService {
 
         d.setCode(request.getCode());
         d.setName(request.getName());
+        d.setActiveIngredient(request.getActiveIngredient());
         d.setForm(request.getForm());
         d.setStrength(request.getStrength());
         d.setServiceItem(si);

@@ -2,6 +2,7 @@ package com.hospital.hospitalmis.controller;
 
 import com.hospital.hospitalmis.dto.*;
 import com.hospital.hospitalmis.dto.encounter.EncounterDetailResponse;
+import com.hospital.hospitalmis.dto.encounter.EncounterVitalsUpdate;
 import com.hospital.hospitalmis.service.EncounterDetailService;
 import com.hospital.hospitalmis.service.EncounterService;
 import org.springframework.http.ResponseEntity;
@@ -105,5 +106,12 @@ public class EncounterController {
     @GetMapping("/encounters/doctor-queue/{doctorId}")
     public ResponseEntity<List<EncounterResponse>> getDoctorQueue(@PathVariable Long doctorId) {
         return ResponseEntity.ok(encounterService.getDoctorQueue(doctorId));
+    }
+
+    @PatchMapping("encounters/{id}/vitals")
+    public ResponseEntity<EncounterResponse> updateVitals(
+            @PathVariable Long id,
+            @RequestBody EncounterVitalsUpdate req) {
+        return ResponseEntity.ok(encounterService.updateVitals(id, req));
     }
 }
