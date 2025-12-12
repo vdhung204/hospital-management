@@ -21,6 +21,8 @@ import PortalDashboard from './pages/portal/PortalDashboard';
 import PortalBooking from './pages/portal/PortalBooking';
 import PortalHistoryDetail from './pages/portal/PortalHistoryDetail';
 import PortalHistory from './pages/portal/PortalHistory';
+import PortalAppointments from './pages/portal/PortalAppointment';
+import PortalProfile from './pages/portal/PortalProfile';
 
 // Import các trang chức năng (tạo placeholder trước)
 const Settings = () => <div>Trang Cấu hình Admin</div>;
@@ -74,9 +76,11 @@ function App() {
         {/* Patient Portal Routes */}
         <Route path="/portal" element={<PatientLayout />}>
           <Route path="dashboard" element={<PortalDashboard />} />
+          <Route path="appointments" element={<PortalAppointments />} />
           <Route path="booking" element={<PortalBooking />} />
           <Route path="history" element={<PortalHistory />} />
           <Route path="history/:id" element={<PortalHistoryDetail />} />
+          <Route path="profile" element={<PortalProfile />} />
         </Route>
         {/* Mặc định */}
         <Route path="/" element={<Navigate to="/dashboard" />} />

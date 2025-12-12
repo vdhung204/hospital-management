@@ -23,7 +23,7 @@ export interface Appointment {
 
 // 2. Type gửi lên để tạo mới (Input)
 export interface CreateAppointmentRequest {
-    patientId: number;
+    patientId?: number;
     departmentId?: number | null;
     doctorId?: number | null;
     scheduledAt: string; // ISO String

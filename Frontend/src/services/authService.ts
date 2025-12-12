@@ -7,3 +7,11 @@ export const loginApi = async (data: LoginRequest): Promise<LoginResponse> => {
   const response = await axiosClient.post<LoginResponse>('/auth/login', data);
   return response.data;
 };
+
+export const authService = {
+    // ... login, register ...
+    getProfile: async () => {
+        const res = await axiosClient.get('/auth/me');
+        return res.data; 
+    }
+};

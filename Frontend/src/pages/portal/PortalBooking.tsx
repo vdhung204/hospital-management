@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, User, Stethoscope, Clock, CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { User, CheckCircle, ChevronRight, ChevronLeft, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { staffService } from '@/services/staffService';
 import { appointmentService } from '@/services/appointmentService';
+import type { Department, Doctor, MyAppointment } from '@/types/Portal';
 
 const PortalBooking = () => {
   const navigate = useNavigate();
@@ -11,42 +13,48 @@ const PortalBooking = () => {
   const [loading, setLoading] = useState(false);
 
   // Data Sources
-  const [departments, setDepartments] = useState<any[]>([]);
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [myAppointments, setMyAppointments] = useState<MyAppointment[]>([]); // Dữ liệu lịch đã đặt
 
   // Selection State
-  const [selectedDept, setSelectedDept] = useState<any>(null);
-  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [selectedDept, setSelectedDept] = useState<Department | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor| null>(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [reason, setReason] = useState('');
+  
+  // Logic State
+  const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [isDuplicateDate, setIsDuplicateDate] = useState(false); // Cờ báo trùng lịch
 
-  // Các khung giờ khám (Demo)
-  const timeSlots = [
-      '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00',
-      '13:30', '14:00', '14:30', '15:00', '15:30', '16:00'
-  ];
-
-  // Load danh sách khoa khi vào trang
+  // 1. Load danh sách khoa & Lịch sử đặt hẹn (để check trùng)
   useEffect(() => {
-      const loadDepts = async () => {
+      const loadInitialData = async () => {
           try {
-              const res = await staffService.getDepartments();
-              setDepartments(res);
-          } catch (e) { toast.error('Lỗi tải danh mục'); }
+              const [depts, appts] = await Promise.all([
+                  staffService.getDepartments(),
+                  appointmentService.getMyAppointments('upcoming') // Lấy lịch sắp tới để check
+              ]);
+              setDepartments(depts);
+              setMyAppointments(appts);
+          } catch (e) { toast.error('Lỗi tải dữ liệu');console.log(e); }
       };
-      loadDepts();
+      loadInitialData();
   }, []);
 
-  // Load bác sĩ khi chọn khoa
+  // 2. Load bác sĩ khi chọn khoa
   useEffect(() => {
       if (selectedDept) {
           const loadDocs = async () => {
               try {
-                  const res = await staffService.getAll();
-                  // Lọc bác sĩ thuộc khoa đã chọn
-                  const filtered = res.filter((s:any) => s.staffType === 'DOCTOR' && s.departmentId === selectedDept.id);
+                const res = await staffService.getAll();
+                  // Type assertion cho res và filter
+                  const allStaff = res as Doctor[];
+                  const filtered = allStaff.filter(s => s.staffType === 'DOCTOR' && s.departmentId === selectedDept.id);
                   setDoctors(filtered);
+                  
+                  setSelectedDoctor(null);
               } catch (e) { console.error(e); }
           };
           loadDocs();
@@ -55,8 +63,51 @@ const PortalBooking = () => {
       }
   }, [selectedDept]);
 
+  // 3. Load Slot & Check trùng ngày
+  useEffect(() => {
+      // Reset trạng thái
+      setTimeSlots([]);
+      setIsDuplicateDate(false);
+      setSelectedTime('');
+
+      if (selectedDoctor && selectedDate) {
+          // A. Check trùng ngày trước khi gọi API slot
+          const checkDate = new Date(selectedDate).toDateString();
+          const hasDuplicate = myAppointments.some(appt => 
+              new Date(appt.scheduledAt).toDateString() === checkDate && appt.status !== 'CANCELLED'
+          );
+
+          if (hasDuplicate) {
+              setIsDuplicateDate(true);
+              return; // Dừng lại, không load slot nữa
+          }
+
+          // B. Nếu không trùng -> Load Slot
+          const loadSlots = async () => {
+              try {
+                  const slots = await appointmentService.getSlots(selectedDoctor.id, selectedDate);
+                  setTimeSlots(slots);
+              } catch (e) {
+                  console.error(e);
+                  toast.error("Không tải được lịch trống");
+              }
+          };
+          loadSlots();
+      }
+  }, [selectedDoctor, selectedDate, myAppointments]);
+
+  // Hàm chọn bác sĩ mặc định (Xử lý Type cho object tự tạo)
+  const handleSelectDefaultDoctor = () => {
+      if (doctors.length > 0) {
+          const defaultDoc: Doctor = {
+              ...doctors[0], 
+              fullName: 'Bác sĩ trực (Mặc định)',
+              staffCode: 'DEFAULT' 
+          };
+          setSelectedDoctor(defaultDoc);
+      }
+  };
   // --- HANDLERS ---
-  
   const handleNext = () => setStep(prev => prev + 1);
   const handleBack = () => setStep(prev => prev - 1);
 
@@ -69,7 +120,7 @@ const PortalBooking = () => {
           
           await appointmentService.createForPatient({
               departmentId: selectedDept?.id,
-              doctorId: selectedDoctor?.id, // Có thể null
+              doctorId: selectedDoctor?.id,
               scheduledAt: isoDateTime,
               reason: reason
           });
@@ -78,6 +129,7 @@ const PortalBooking = () => {
           navigate('/portal/dashboard');
       } catch (error) {
           toast.error('Lỗi đặt lịch. Vui lòng thử lại.');
+          console.log(error);
       } finally {
           setLoading(false);
       }
@@ -89,12 +141,7 @@ const PortalBooking = () => {
       {/* Header Progress */}
       <div className="bg-teal-600 p-6 text-white">
           <h1 className="text-xl font-bold mb-1">Đặt lịch khám bệnh</h1>
-          <p className="text-teal-100 text-sm opacity-90">Bước {step}/3: {
-              step === 1 ? 'Chọn chuyên khoa & Bác sĩ' : 
-              step === 2 ? 'Chọn thời gian' : 'Xác nhận thông tin'
-          }</p>
-          
-          {/* Progress Bar */}
+          <p className="text-teal-100 text-sm opacity-90">Bước {step}/3</p>
           <div className="h-1 bg-teal-800 rounded-full mt-4 overflow-hidden">
               <div className="h-full bg-yellow-400 transition-all duration-500" style={{width: `${(step/3)*100}%`}}></div>
           </div>
@@ -130,43 +177,53 @@ const PortalBooking = () => {
                       <div className="animate-fade-in">
                           <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
                               <div className="w-6 h-6 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-xs">2</div>
-                              Chọn Bác sĩ (Tùy chọn)
+                              Chọn Bác sĩ
                           </label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div 
-                                  onClick={() => setSelectedDoctor(null)}
-                                  className={`p-3 border rounded-xl cursor-pointer flex items-center gap-3 ${
-                                      selectedDoctor === null 
-                                      ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500' 
-                                      : 'border-slate-200'
-                                  }`}
-                              >
-                                  <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-500"><User size={20}/></div>
-                                  <div>
-                                      <p className="font-bold text-sm text-slate-700">Bác sĩ mặc định</p>
-                                      <p className="text-xs text-slate-500">Do bệnh viện chỉ định</p>
-                                  </div>
+                          
+                          {/* LOGIC HIỂN THỊ KHI KHÔNG CÓ BÁC SĨ */}
+                          {doctors.length === 0 ? (
+                              <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-center gap-3 text-orange-700">
+                                  <AlertCircle size={20}/>
+                                  <span className="text-sm font-medium">Hiện tại khoa này chưa có bác sĩ nào nhận lịch. Vui lòng chọn khoa khác.</span>
                               </div>
-
-                              {doctors.map(doc => (
-                                  <div key={doc.id} 
-                                      onClick={() => setSelectedDoctor(doc)}
+                          ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {/* Tùy chọn Bác sĩ mặc định */}
+                                  <div 
+                                      onClick={handleSelectDefaultDoctor} 
                                       className={`p-3 border rounded-xl cursor-pointer flex items-center gap-3 ${
-                                          selectedDoctor?.id === doc.id 
+                                          selectedDoctor?.fullName === 'Bác sĩ trực (Mặc định)'
                                           ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500' 
-                                          : 'border-slate-200 hover:bg-slate-50'
+                                          : 'border-slate-200'
                                       }`}
                                   >
-                                      <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
-                                          {doc.fullName.charAt(0)}
-                                      </div>
+                                      <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-500"><User size={20}/></div>
                                       <div>
-                                          <p className="font-bold text-sm text-slate-700">{doc.fullName}</p>
-                                          <p className="text-xs text-slate-500">{doc.staffCode}</p>
+                                          <p className="font-bold text-sm text-slate-700">Bác sĩ ngẫu nhiên</p>
+                                          <p className="text-xs text-slate-500">Do bệnh viện sắp xếp</p>
                                       </div>
                                   </div>
-                              ))}
-                          </div>
+
+                                  {doctors.map(doc => (
+                                      <div key={doc.id} 
+                                          onClick={() => setSelectedDoctor(doc)}
+                                          className={`p-3 border rounded-xl cursor-pointer flex items-center gap-3 ${
+                                              selectedDoctor?.id === doc.id && selectedDoctor.fullName !== 'Bác sĩ trực (Mặc định)'
+                                              ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500' 
+                                              : 'border-slate-200 hover:bg-slate-50'
+                                          }`}
+                                      >
+                                          <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                                              {doc.fullName.charAt(0)}
+                                          </div>
+                                          <div>
+                                              <p className="font-bold text-sm text-slate-700">{doc.fullName}</p>
+                                              <p className="text-xs text-slate-500">{doc.staffCode}</p>
+                                          </div>
+                                      </div>
+                                  ))}
+                              </div>
+                          )}
                       </div>
                   )}
               </div>
@@ -179,30 +236,46 @@ const PortalBooking = () => {
                       <label className="block text-sm font-bold text-slate-700 mb-2">Ngày muốn khám</label>
                       <input 
                           type="date" 
-                          className="w-full p-3 border border-slate-300 rounded-xl outline-none focus:border-teal-500 font-medium text-slate-700"
+                          className={`w-full p-3 border rounded-xl outline-none font-medium text-slate-700 ${isDuplicateDate ? 'border-red-300 bg-red-50 focus:border-red-500' : 'border-slate-300 focus:border-teal-500'}`}
                           value={selectedDate}
                           min={new Date().toISOString().split('T')[0]}
                           onChange={(e) => setSelectedDate(e.target.value)}
                       />
+                      
+                      {/* CẢNH BÁO TRÙNG LỊCH */}
+                      {isDuplicateDate && (
+                          <div className="mt-2 text-red-600 text-sm flex items-center gap-2 animate-pulse">
+                              <AlertCircle size={16}/>
+                              Bạn đã có lịch hẹn khám vào ngày này rồi. Vui lòng chọn ngày khác.
+                          </div>
+                      )}
                   </div>
 
-                  <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-3">Khung giờ còn trống</label>
-                      <div className="grid grid-cols-4 gap-3">
-                          {timeSlots.map(time => (
-                              <button key={time}
-                                  onClick={() => setSelectedTime(time)}
-                                  className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                                      selectedTime === time
-                                      ? 'bg-teal-600 text-white shadow-md'
-                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                  }`}
-                              >
-                                  {time}
-                              </button>
-                          ))}
+                  {!isDuplicateDate && selectedDate && (
+                      <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-3">Khung giờ còn trống</label>
+                          {timeSlots.length > 0 ? (
+                              <div className="grid grid-cols-4 gap-3">
+                                  {timeSlots.map(time => (
+                                      <button key={time}
+                                          onClick={() => setSelectedTime(time)}
+                                          className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                                              selectedTime === time
+                                              ? 'bg-teal-600 text-white shadow-md'
+                                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                          }`}
+                                      >
+                                          {time}
+                                      </button>
+                                  ))}
+                              </div>
+                          ) : (
+                              <p className="text-sm text-slate-500 italic bg-slate-50 p-3 rounded-lg border border-dashed border-slate-300">
+                                  Bác sĩ đã kín lịch hoặc không làm việc vào ngày này.
+                              </p>
+                          )}
                       </div>
-                  </div>
+                  )}
 
                   <div>
                       <label className="block text-sm font-bold text-slate-700 mb-2">Lý do khám / Triệu chứng</label>
@@ -217,8 +290,8 @@ const PortalBooking = () => {
               </div>
           )}
 
-          {/* --- BƯỚC 3: XÁC NHẬN --- */}
-          {step === 3 && (
+          {/* BƯỚC 3 GIỮ NGUYÊN ... */}
+                    {step === 3 && (
               <div className="space-y-6 animate-fade-in text-center">
                   <div className="w-16 h-16 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
                       <CheckCircle size={32}/>
@@ -259,13 +332,18 @@ const PortalBooking = () => {
                   <ChevronLeft size={18}/> Quay lại
               </button>
           ) : (
-              <div></div> // Spacer
+              <div></div>
           )}
 
           {step < 3 ? (
               <button 
                   onClick={handleNext} 
-                  disabled={!selectedDept || (step===2 && (!selectedDate || !selectedTime))}
+                  disabled={
+                      !selectedDept || // Chưa chọn khoa
+                      (doctors.length === 0) || // Khoa không có bác sĩ
+                      !selectedDoctor || // Chưa chọn bác sĩ
+                      (step===2 && (isDuplicateDate || !selectedDate || !selectedTime)) // Bước 2 chưa xong
+                  }
                   className="px-6 py-2.5 bg-teal-600 text-white rounded-xl font-bold shadow-lg hover:bg-teal-700 disabled:bg-slate-300 disabled:shadow-none transition flex items-center gap-2"
               >
                   Tiếp tục <ChevronRight size={18}/>
