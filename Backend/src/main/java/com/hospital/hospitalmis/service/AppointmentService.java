@@ -29,4 +29,7 @@ public interface AppointmentService {
     AppointmentDetailDto createForPatientByDoctor(Long patientId, Long doctorId, LocalDateTime scheduledAt);
 
     Long checkIn(Long id);
+
+    List<String> getDoctorAvailableSlots(Long doctorId, LocalDate date);
+    List<AppointmentDetailDto> getAllByPatient(Long patientId);
 }
