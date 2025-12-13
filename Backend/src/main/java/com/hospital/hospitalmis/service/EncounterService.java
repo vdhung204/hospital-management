@@ -26,6 +26,7 @@ public class EncounterService {
     private final ClinicalNoteRepository clinicalNoteRepository;
     private final ICD10CodeRepository icd10CodeRepository;
     private final AppointmentRepository appointmentRepository;
+    private final AuditLogService auditLogService;
 
     public EncounterService(EncounterRepository encounterRepository,
                             PatientRepository patientRepository,
@@ -33,7 +34,8 @@ public class EncounterService {
                             EncounterDiagnosisRepository encounterDiagnosisRepository,
                             ClinicalNoteRepository clinicalNoteRepository,
                             ICD10CodeRepository icd10CodeRepository,
-                            AppointmentRepository appointmentRepository) {
+                            AppointmentRepository appointmentRepository,
+                            AuditLogService auditLogService) {
         this.encounterRepository = encounterRepository;
         this.patientRepository = patientRepository;
         this.departmentRepository = departmentRepository;
@@ -41,6 +43,7 @@ public class EncounterService {
         this.clinicalNoteRepository = clinicalNoteRepository;
         this.icd10CodeRepository = icd10CodeRepository;
         this.appointmentRepository = appointmentRepository;
+        this.auditLogService = auditLogService;
     }
 
     public EncounterResponse createEncounter(EncounterCreateRequest req) {
@@ -88,13 +91,26 @@ public class EncounterService {
 //        enc.setPulse(req.getPulse());
 
         Encounter saved = encounterRepository.save(enc);
+        auditLogService.log(
+                "CREATE",
+                "Encounter",
+                saved.getId(),
+                "Tạo lượt khám mới cho BN: " + saved.getPatient().getPatientCode()
+        );
         return mapToResponse(saved);
     }
     public void updateStatus(Long id, String newStatus) {
         Encounter enc = encounterRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Encounter not found"));
+        String oldStatus = enc.getStatus();
         enc.setStatus(newStatus);
         encounterRepository.save(enc);
+        auditLogService.log(
+                "UPDATE_STATUS",
+                "Encounter",
+                id,
+                String.format("Đổi trạng thái từ %s sang %s", oldStatus, newStatus)
+        );
     }
     // Hàm Soft Delete
     public void deleteEncounter(Long id) {
@@ -118,6 +134,17 @@ public class EncounterService {
                 .collect(Collectors.toList());
     }
 
+    public List<EncounterResponse> search(String keyword, Long departmentId, String status, LocalDate fromDate, LocalDate toDate) {
+        // Xử lý ngày giờ: từ đầu ngày fromDate đến cuối ngày toDate
+        LocalDateTime start = (fromDate != null) ? fromDate.atStartOfDay() : LocalDate.now().minusMonths(1).atStartOfDay();
+        LocalDateTime end = (toDate != null) ? toDate.atTime(LocalTime.MAX) : LocalDate.now().atTime(LocalTime.MAX);
+
+        List<Encounter> list = encounterRepository.searchEncounters(keyword, departmentId, status, start, end);
+
+        return list.stream()
+                .map(this::mapToResponse) // Tái sử dụng hàm map có sẵn [cite: 570]
+                .collect(Collectors.toList());
+    }
     // Map Entity -> DTO
     private EncounterResponse mapToResponse(Encounter enc) {
         EncounterResponse dto = new EncounterResponse();

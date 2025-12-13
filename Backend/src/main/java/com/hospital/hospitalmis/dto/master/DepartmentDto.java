@@ -5,6 +5,7 @@ public class DepartmentDto {
     private Long id;
     private String code;
     private String name;
+    private boolean isDelete;
 
     // getters/setters
     public Long getId() { return id; }
@@ -15,4 +16,7 @@ public class DepartmentDto {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public boolean getIsDelete() { return isDelete; }
+    public void setIsDelete(boolean isDelete) { this.isDelete = isDelete; }
 }

@@ -45,4 +45,20 @@ public interface EncounterRepository extends JpaRepository<Encounter, Long> {
 
     long countByStatus(String inProgress);
     List<Encounter> findByPatientIdOrderByVisitDateDesc(Long patientId);
+
+    @Query("SELECT e FROM Encounter e " +
+            "WHERE (:keyword IS NULL OR :keyword = '' OR " +
+            "       LOWER(e.patient.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "       LOWER(e.patient.patientCode) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:departmentId IS NULL OR e.department.id = :departmentId) " +
+            "AND (:status IS NULL OR :status = '' OR e.status = :status) " +
+            "AND (e.visitDate BETWEEN :fromDate AND :toDate) " +
+            "ORDER BY e.visitDate DESC")
+    List<Encounter> searchEncounters(
+            @Param("keyword") String keyword,
+            @Param("departmentId") Long departmentId,
+            @Param("status") String status,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate
+    );
 }

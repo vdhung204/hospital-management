@@ -9,6 +9,8 @@ public interface DepartmentService {
 
     List<DepartmentDto> getAll();
 
+    List<DepartmentDto> getAllAdmin();
+
     DepartmentDto getById(Long id);
 
     DepartmentDto create(DepartmentRequest request);
@@ -16,4 +18,6 @@ public interface DepartmentService {
     DepartmentDto update(Long id, DepartmentRequest request);
 
     void delete(Long id);
+
+    void restore(Long id);
 }

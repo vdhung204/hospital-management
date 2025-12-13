@@ -22,4 +22,7 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     Optional<Staff> findByUser_Id(Long userId);
     @Query("select coalesce(max(s.id), 0) from Staff s")
     Long findMaxId();
+    boolean existsByPhone(String phone);
+    boolean existsByEmail(String email);
+    boolean existsByIdNumber(String idNumber);
 }

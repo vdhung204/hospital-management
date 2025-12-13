@@ -25,12 +25,21 @@ public class DepartmentServiceImpl implements DepartmentService {
         dto.setId(entity.getId());
         dto.setCode(entity.getCode());
         dto.setName(entity.getName());
+        dto.setIsDelete(entity.getIsDeleted());
         return dto;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<DepartmentDto> getAll() {
+        return departmentRepository.findByIsDeletedFalse()
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<DepartmentDto> getAllAdmin() {
         return departmentRepository.findAll()
                 .stream()
                 .map(this::toDto)
@@ -79,7 +88,17 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public void delete(Long id) {
-        // tuỳ anh, có thể check ràng buộc (có encounter, staff, service_item đang dùng không)
-        departmentRepository.deleteById(id);
+        Department d = departmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Department not found"));
+        d.setIsDeleted(true);
+        departmentRepository.save(d);
+    }
+
+    @Override
+    public void restore(Long id) {
+        Department d = departmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Department not found"));
+        d.setIsDeleted(false);
+        departmentRepository.save(d);
     }
 }

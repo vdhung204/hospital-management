@@ -21,8 +21,11 @@ public class DepartmentController {
     // GET /api/departments
     @GetMapping
     public ResponseEntity<List<DepartmentDto>> getAll() {
-        System.out.println(">>> DepartmentController.getAll CALLED");
         return ResponseEntity.ok(departmentService.getAll());
+    }
+    @GetMapping("/admin")
+    public ResponseEntity<List<DepartmentDto>> getAllAdmin() {
+        return ResponseEntity.ok(departmentService.getAllAdmin());
     }
 
     // GET /api/departments/{id}
@@ -30,6 +33,7 @@ public class DepartmentController {
     public ResponseEntity<DepartmentDto> getOne(@PathVariable Long id) {
         return ResponseEntity.ok(departmentService.getById(id));
     }
+
 
     // POST /api/departments
     @PostMapping
@@ -52,6 +56,12 @@ public class DepartmentController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         departmentService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Void> restore(@PathVariable Long id) {
+        departmentService.restore(id);
         return ResponseEntity.noContent().build();
     }
 }

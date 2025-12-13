@@ -1,6 +1,8 @@
 package com.hospital.hospitalmis.controller;
 
 import com.hospital.hospitalmis.dto.EncounterResponse;
+import com.hospital.hospitalmis.dto.account.ChangePasswordRequest;
+import com.hospital.hospitalmis.dto.account.PatientProfileUpdateRequest;
 import com.hospital.hospitalmis.dto.appointment.AppointmentDetailDto;
 import com.hospital.hospitalmis.dto.appointment.AppointmentRequest;
 import com.hospital.hospitalmis.dto.auth.CurrentUserResponse;
@@ -10,6 +12,8 @@ import com.hospital.hospitalmis.repository.UserAccountRepository;
 import com.hospital.hospitalmis.service.AppointmentService;
 import com.hospital.hospitalmis.service.EncounterDetailService;
 import com.hospital.hospitalmis.service.EncounterService;
+import com.hospital.hospitalmis.service.PatientService;
+import com.hospital.hospitalmis.service.impl.PatientPortalServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,15 +31,18 @@ public class PatientPortalController {
     private final AppointmentService appointmentService;
     private final EncounterService encounterService;
     private final EncounterDetailService encounterDetailService;
+    private final PatientPortalServiceImpl portalService;
 
     public PatientPortalController(UserAccountRepository userAccountRepository,
                                    AppointmentService appointmentService,
                                    EncounterService encounterService,
-                                   EncounterDetailService encounterDetailService) {
+                                   EncounterDetailService encounterDetailService,
+                                   PatientPortalServiceImpl portalService) {
         this.userAccountRepository = userAccountRepository;
         this.appointmentService = appointmentService;
         this.encounterService = encounterService;
         this.encounterDetailService = encounterDetailService;
+        this.portalService = portalService;
     }
 
     // --- HELPER: Lấy Patient ID từ Token ---
@@ -78,12 +85,6 @@ public class PatientPortalController {
         return ResponseEntity.ok(encounterService.getHistoryByPatient(patientId));
     }
 
-    // 2. Xem lịch hẹn sắp tới
-//    @GetMapping("/appointments")
-//    public ResponseEntity<List<AppointmentDetailDto>> getMyAppointments() {
-//        Long patientId = getCurrentPatientId();
-//        return ResponseEntity.ok(appointmentService.getUpcomingByPatient(patientId));
-//    }
     @GetMapping("/appointments")
     public ResponseEntity<List<AppointmentDetailDto>> getMyAppointments(
             @RequestParam(defaultValue = "upcoming") String view // "upcoming" hoặc "all"
@@ -112,5 +113,18 @@ public class PatientPortalController {
     public ResponseEntity<EncounterDetailResponse> getEncounterDetail(@PathVariable Long id) {
         EncounterDetailResponse dto = encounterDetailService.getEncounterDetail(id);
         return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/account/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
+        portalService.changePassword(request);
+        return ResponseEntity.ok("Đổi mật khẩu thành công");
+    }
+
+    // API: Cập nhật thông tin cá nhân
+    @PutMapping("/account/profile")
+    public ResponseEntity<CurrentUserResponse> updateProfile(@RequestBody PatientProfileUpdateRequest request) {
+        CurrentUserResponse updatedProfile = portalService.updateMyProfile(request);
+        return ResponseEntity.ok(updatedProfile);
     }
 }

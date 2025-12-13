@@ -30,6 +30,7 @@ public class BillingService {
     private final PrescriptionItemRepository prescriptionItemRepository;
     private final DrugRepository drugRepository;
     private final InsuranceCardRepository insuranceCardRepository;
+    private final AuditLogService auditLogService;
 
     public BillingService(InvoiceRepository invoiceRepository,
                           InvoiceLineRepository invoiceLineRepository,
@@ -42,7 +43,8 @@ public class BillingService {
                           PrescriptionRepository prescriptionRepository,
                           PrescriptionItemRepository prescriptionItemRepository,
                           DrugRepository drugRepository,
-                          InsuranceCardRepository insuranceCardRepository) {
+                          InsuranceCardRepository insuranceCardRepository,
+                          AuditLogService auditLogService) {
         this.invoiceRepository = invoiceRepository;
         this.invoiceLineRepository = invoiceLineRepository;
         this.paymentRepository = paymentRepository;
@@ -55,6 +57,7 @@ public class BillingService {
         this.prescriptionItemRepository = prescriptionItemRepository;
         this.drugRepository = drugRepository;
         this.insuranceCardRepository = insuranceCardRepository;
+        this.auditLogService = auditLogService;
     }
 
     // ==================== TẠO HÓA ĐƠN ====================
@@ -672,7 +675,6 @@ public class BillingService {
 
     // Xóa hóa đơn (Chỉ cho phép xóa nếu chưa thanh toán)
     public void deleteInvoice(Long invoiceId) {
-        System.out.println("da den service");
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
@@ -680,7 +682,6 @@ public class BillingService {
         if (!"DRAFT".equals(invoice.getStatus())) {
             throw new RuntimeException("Không thể xóa/tính lại hóa đơn đã phát sinh thanh toán!");
         }
-        System.out.println("cbi xoa");
         List<InvoiceLine> lines = invoiceLineRepository.findByInvoice_Id(invoiceId);
         invoiceLineRepository.deleteAll(lines);
 
@@ -688,7 +689,12 @@ public class BillingService {
         List<Payment> payments = paymentRepository.findByInvoice_Id(invoiceId);
         paymentRepository.deleteAll(payments);
         // Do CascadeType.ALL, xóa Invoice sẽ tự xóa InvoiceLine
+        auditLogService.log(
+                "DELETE",
+                "Invoice",
+                invoiceId,
+                "Xóa hóa đơn nháp. Tổng tiền: " + invoice.getTotalAmount()
+        );
         invoiceRepository.delete(invoice);
-        System.out.println("da xoa");
     }
 }
