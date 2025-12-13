@@ -54,23 +54,6 @@ const MainLayout = () => {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
           {filteredMenu.map((item) => {
             const Icon = item.icon;
-            // const isActive = location.pathname.startsWith(item.path);
-            
-            // return (
-            //   <Link
-            //     key={item.path}
-            //     to={item.path}
-            //     className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-            //       isActive 
-            //         ? 'bg-teal-50 text-teal-700 font-semibold shadow-sm' 
-            //         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            //     }`}
-            //   >
-            //     <Icon size={20} className={`transition-colors ${isActive ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
-            //     <span className="text-sm">{item.title}</span>
-            //     {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-teal-500"></div>}
-            //   </Link>
-            // );
             // TRƯỜNG HỢP 1: MENU CÓ CON (DROPDOWN)
             if (item.children && item.children.length > 0) {
                 const isOpen = openSubmenu === item.path;

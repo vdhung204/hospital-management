@@ -22,6 +22,7 @@ const PatientLayout = () => {
 
   const menuItems = [
     { icon: Home, label: 'Trang chủ', path: '/portal/dashboard' },
+    { icon: Calendar, label: 'Chat AI', path: '/portal/chatbot' },
     { icon: Calendar, label: 'Đặt lịch', path: '/portal/booking' },
     { icon: Clock, label: 'Lịch sử khám', path: '/portal/history' },
     { icon: Calendar, label: 'Lịch hẹn của tôi', path: '/portal/appointments' },

@@ -1,0 +1,68 @@
+/* PatientChat.css */
+
+/* Khung bao ngoài cùng, chiếm full chiều cao của khu vực content */
+.chat-dashboard-card {
+    height: calc(100vh - 120px); /* Trừ đi chiều cao của Header/Navbar portal */
+    display: flex;
+    flex-direction: column;
+    border: none;
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.chat-header {
+    background-color: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 15px 20px;
+    border-radius: 12px 12px 0 0;
+}
+
+.chat-messages-area {
+    flex: 1; /* Chiếm toàn bộ không gian còn lại */
+    overflow-y: auto;
+    padding: 20px;
+    background-color: #f8faff; /* Màu nền nhẹ khác biệt */
+}
+
+/* Tùy chỉnh thanh cuộn */
+.chat-messages-area::-webkit-scrollbar {
+    width: 6px;
+}
+.chat-messages-area::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 10px;
+}
+
+.message-box {
+    max-width: 70%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    position: relative;
+    line-height: 1.5;
+}
+
+/* Bot style */
+.msg-bot {
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    color: #333;
+    border-top-left-radius: 0;
+    margin-left: 10px;
+}
+
+/* User style - Tím pastel chủ đạo */
+.msg-user {
+    background-color: #a78bfa; 
+    color: white;
+    border-top-right-radius: 0;
+    margin-right: 10px;
+}
+
+.chat-input-area {
+    padding: 15px;
+    background-color: #fff;
+    border-top: 1px solid #f0f0f0;
+    border-radius: 0 0 12px 12px;
+}
