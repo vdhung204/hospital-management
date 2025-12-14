@@ -1,6 +1,8 @@
 package com.hospital.hospitalmis.controller;
 
 import com.hospital.hospitalmis.dto.EncounterResponse;
+import com.hospital.hospitalmis.dto.account.ChangePasswordRequest;
+import com.hospital.hospitalmis.dto.account.PatientProfileUpdateRequest;
 import com.hospital.hospitalmis.dto.appointment.AppointmentDetailDto;
 import com.hospital.hospitalmis.dto.appointment.AppointmentRequest;
 import com.hospital.hospitalmis.dto.auth.CurrentUserResponse;
@@ -10,6 +12,8 @@ import com.hospital.hospitalmis.repository.UserAccountRepository;
 import com.hospital.hospitalmis.service.AppointmentService;
 import com.hospital.hospitalmis.service.EncounterDetailService;
 import com.hospital.hospitalmis.service.EncounterService;
+import com.hospital.hospitalmis.service.PatientService;
+import com.hospital.hospitalmis.service.impl.PatientPortalServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,15 +31,18 @@ public class PatientPortalController {
     private final AppointmentService appointmentService;
     private final EncounterService encounterService;
     private final EncounterDetailService encounterDetailService;
+    private final PatientPortalServiceImpl portalService;
 
     public PatientPortalController(UserAccountRepository userAccountRepository,
                                    AppointmentService appointmentService,
                                    EncounterService encounterService,
-                                   EncounterDetailService encounterDetailService) {
+                                   EncounterDetailService encounterDetailService,
+                                   PatientPortalServiceImpl portalService) {
         this.userAccountRepository = userAccountRepository;
         this.appointmentService = appointmentService;
         this.encounterService = encounterService;
         this.encounterDetailService = encounterDetailService;
+        this.portalService = portalService;
     }
 
     // --- HELPER: Lấy Patient ID từ Token ---
@@ -56,9 +63,6 @@ public class PatientPortalController {
         } else if (principal instanceof String) {
             username = (String) principal;
         } else {
-            // Trường hợp bạn lưu DTO tùy chỉnh (như CurrentUserResponse)
-            // Nếu bạn chắc chắn 100% config JWT của bạn trả về CurrentUserResponse thì mới dùng cách cũ.
-            // Nhưng cách an toàn nhất vẫn là toString() hoặc ép kiểu về UserDetails.
             throw new RuntimeException("Không xác định được loại tài khoản (Principal type mismatch)");
         }
 
@@ -66,9 +70,6 @@ public class PatientPortalController {
         UserAccount ua = userAccountRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + username));
 
-        // 4. Kiểm tra liên kết bệnh nhân
-        // Lưu ý: Tùy vào Entity của bạn là getPatientId() hay getPatient().getId()
-        // Dựa vào file I.docx thì bảng UserAccount có cột patient_id
         if (ua.getPatientId() == null) {
             throw new RuntimeException("Tài khoản này không liên kết với hồ sơ bệnh nhân!");
         }
@@ -84,14 +85,17 @@ public class PatientPortalController {
         return ResponseEntity.ok(encounterService.getHistoryByPatient(patientId));
     }
 
-    // 2. Xem lịch hẹn sắp tới
     @GetMapping("/appointments")
-    public ResponseEntity<List<AppointmentDetailDto>> getMyAppointments() {
+    public ResponseEntity<List<AppointmentDetailDto>> getMyAppointments(
+            @RequestParam(defaultValue = "upcoming") String view // "upcoming" hoặc "all"
+    ) {
         Long patientId = getCurrentPatientId();
-        // Tận dụng hàm search đã có, chỉ filter theo patientId
-        // Lưu ý: Cần sửa service search để trả về DetailDto hoặc tạo hàm mới
-        // Ở đây giả sử bạn viết hàm getUpcomingAppointmentsByPatient trong service
-        return ResponseEntity.ok(appointmentService.getUpcomingByPatient(patientId));
+
+        if ("all".equals(view)) {
+            return ResponseEntity.ok(appointmentService.getAllByPatient(patientId));
+        } else {
+            return ResponseEntity.ok(appointmentService.getUpcomingByPatient(patientId));
+        }
     }
 
     // 3. Đặt lịch hẹn mới (Dành cho BN tự đặt)
@@ -109,5 +113,18 @@ public class PatientPortalController {
     public ResponseEntity<EncounterDetailResponse> getEncounterDetail(@PathVariable Long id) {
         EncounterDetailResponse dto = encounterDetailService.getEncounterDetail(id);
         return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/account/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
+        portalService.changePassword(request);
+        return ResponseEntity.ok("Đổi mật khẩu thành công");
+    }
+
+    // API: Cập nhật thông tin cá nhân
+    @PutMapping("/account/profile")
+    public ResponseEntity<CurrentUserResponse> updateProfile(@RequestBody PatientProfileUpdateRequest request) {
+        CurrentUserResponse updatedProfile = portalService.updateMyProfile(request);
+        return ResponseEntity.ok(updatedProfile);
     }
 }

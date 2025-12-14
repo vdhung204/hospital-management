@@ -16,4 +16,6 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
     Optional<Patient> findByPatientCode(String patientCode);
     @Query("select coalesce(max(p.id), 0) from Patient p")
     Long findMaxId();
+    boolean existsByPhone(String phone);
+    boolean existsByIdNumber(String idNumber);
 }

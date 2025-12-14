@@ -5,9 +5,11 @@ import com.hospital.hospitalmis.dto.encounter.EncounterDetailResponse;
 import com.hospital.hospitalmis.dto.encounter.EncounterVitalsUpdate;
 import com.hospital.hospitalmis.service.EncounterDetailService;
 import com.hospital.hospitalmis.service.EncounterService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -30,6 +32,16 @@ public class EncounterController {
 
         EncounterResponse created = encounterService.createEncounter(request);
         return ResponseEntity.ok(created);
+    }
+    @GetMapping("/admin/encounters")
+    public ResponseEntity<List<EncounterResponse>> searchEncounters(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate
+    ) {
+        return ResponseEntity.ok(encounterService.search(keyword, departmentId, status, fromDate, toDate));
     }
 
     // GET /api/encounters/{id} -> xem chi tiết 1 Encounter

@@ -11,7 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -103,8 +106,6 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .map(this::toListItem)
                 .toList();
     }
-
-    // ... inject thêm EncounterRepository vào constructor ...
 
     @Override
     public Long checkIn(Long id) {
@@ -205,7 +206,65 @@ public class AppointmentServiceImpl implements AppointmentService {
         return toDetailDto(saved);
     }
 
+    @Override
+    public List<String> getDoctorAvailableSlots(Long doctorId, LocalDate date) {
+        List<String> availableSlots = new ArrayList<>();
 
+        // 1. Cấu hình giờ làm việc (Có thể đưa vào Config hoặc DB)
+        LocalDateTime workStart = date.atTime(8, 0);  // 08:00 sáng
+        LocalDateTime workEnd = date.atTime(17, 0);   // 17:00 chiều
+        int durationMinutes = 30; // Mỗi ca 30 phút
+
+        // 2. Lấy danh sách lịch đã đặt (Trừ những lịch đã Hủy)
+        List<Appointment> bookedApps = appointmentRepository.findByDoctorIdAndScheduledAtBetweenAndStatusNot(
+                doctorId,
+                date.atStartOfDay(),
+                date.atTime(23, 59, 59),
+                "CANCELLED"
+        );
+
+        // Tạo một Set chứa các giờ đã đặt để check cho nhanh (VD: "08:30", "10:00")
+        Set<String> bookedTimes = bookedApps.stream()
+                .map(a -> a.getScheduledAt().toLocalTime().toString().substring(0, 5)) // Lấy HH:mm
+                .collect(Collectors.toSet());
+
+        // 3. Vòng lặp quét từng slot
+        LocalDateTime currentSlot = workStart;
+        while (currentSlot.isBefore(workEnd)) {
+            // Bỏ qua giờ nghỉ trưa (VD: 12:00 - 13:30)
+            int hour = currentSlot.getHour();
+            if (hour >= 12 && hour < 13) {
+                currentSlot = currentSlot.plusMinutes(durationMinutes);
+                continue;
+            }
+
+            // Check quá khứ (Nếu xem ngày hôm nay, không hiện giờ đã qua)
+            if (date.equals(LocalDate.now()) && currentSlot.isBefore(LocalDateTime.now())) {
+                currentSlot = currentSlot.plusMinutes(durationMinutes);
+                continue;
+            }
+
+            String timeString = currentSlot.toLocalTime().toString().substring(0, 5); // "08:00"
+
+            // 4. Nếu chưa bị đặt -> Thêm vào list
+            if (!bookedTimes.contains(timeString)) {
+                availableSlots.add(timeString);
+            }
+
+            // Nhảy sang slot tiếp theo
+            currentSlot = currentSlot.plusMinutes(durationMinutes);
+        }
+
+        return availableSlots;
+    }
+
+    @Override
+    public List<AppointmentDetailDto> getAllByPatient(Long patientId) {
+        return appointmentRepository.findByPatientIdOrderByScheduledAtDesc(patientId)
+                .stream()
+                .map(this::toDetailDto)
+                .toList();
+    }
     // ===== mapping helpers =====
 
     private AppointmentDetailDto toDetailDto(Appointment a) {

@@ -61,6 +61,14 @@ export interface EncounterDetail {
 }
 export interface Department {
   id: number;
+  code: string;
+  name: string;
+  isDelete: boolean;
+}
+
+// Map với DepartmentRequest
+export interface DepartmentRequest {
+  code: string;
   name: string;
 }
 

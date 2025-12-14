@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-// Sửa đường dẫn import thành tương đối để tránh lỗi alias '@'
 import { patientService } from '../../services/patientService';
 import type { Patient, PatientRequest } from '../../types/Patient';
 import CreateEncounterModal from '../../components/reception/CreateEncounterModel';
@@ -8,6 +7,7 @@ import { Plus, Search, Edit2, Trash2, X, Stethoscope, Users, Activity, Calendar 
 import { toast } from 'react-toastify';
 import { AxiosError } from 'axios';
 import InsuranceCardManager from '@/components/patients/InsuranceCardManager';
+import { handleError } from '@/utils/errorHandler';
 
 const PatientPage = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -99,8 +99,7 @@ const PatientPage = () => {
       setIsModalOpen(false);
       fetchPatients(); // Tải lại danh sách
     } catch (error) {
-      console.log(error);
-      toast.error('Có lỗi xảy ra!');
+      handleError(error, 'Không thể lưu thông tin bệnh nhân!');
     }
   };
 
@@ -112,8 +111,7 @@ const PatientPage = () => {
         toast.success('Đã xóa bệnh nhân');
         fetchPatients();
       } catch (error) {
-        console.log(error);
-        toast.error('Không thể xóa');
+        handleError(error, 'Không thể lưu thông tin bệnh nhân!');
       }
     }
   };
@@ -373,7 +371,7 @@ const PatientPage = () => {
             {/* Footer Modal */}
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
               <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-sm transition-all">Hủy bỏ</button>
-                      <button type="submit" className="px-5 py-2.5 rounded-lg bg-teal-600 text-white hover:bg-teal-700 font-medium shadow-lg shadow-teal-500/30 text-sm transition-all">
+                      <button type="submit" form="patient-form" className="px-5 py-2.5 rounded-lg bg-teal-600 text-white hover:bg-teal-700 font-medium shadow-lg shadow-teal-500/30 text-sm transition-all">
                         {editingPatient ? 'Cập nhật' : 'Thêm mới'}
                       </button>
             </div>

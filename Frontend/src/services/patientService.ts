@@ -17,7 +17,7 @@ export const patientService = {
     const response = await axiosClient.post<Patient>('/auth/register/patient', {
         ...data,
         username: data.phone, // Tạm lấy SĐT làm username
-        password: '123'       // Mật khẩu mặc định
+        password: '123456'       // Mật khẩu mặc định
     });
     return response.data;
   },

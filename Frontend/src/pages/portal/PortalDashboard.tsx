@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar, Clock, Activity, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '@/api/axiosClient'; // Hoặc dùng service riêng
+import type { PortalAppointment, PortalEncounterSummary } from '@/types/Portal';
 
 const PortalDashboard = () => {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [lastEncounter, setLastEncounter] = useState<any>(null);
+  const [appointments, setAppointments] = useState<PortalAppointment[]>([]);
+  const [lastEncounter, setLastEncounter] = useState<PortalEncounterSummary| null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -41,7 +42,7 @@ const PortalDashboard = () => {
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                  <Calendar className="text-blue-500"/> Lịch hẹn sắp tới
               </h3>
-              <span className="text-xs text-blue-600 font-bold cursor-pointer" onClick={()=>navigate('/portal/booking')}>Xem tất cả</span>
+              <span className="text-xs text-blue-600 font-bold cursor-pointer" onClick={()=>navigate('/portal/appointments')}>Xem tất cả</span>
            </div>
            
            {appointments.length > 0 ? (

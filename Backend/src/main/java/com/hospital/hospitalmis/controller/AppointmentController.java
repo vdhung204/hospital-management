@@ -101,4 +101,14 @@ public class AppointmentController {
     public ResponseEntity<AppointmentDetailDto> markDone(@PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.markDone(id));
     }
+
+    @GetMapping("/doctors/{doctorId}/slots")
+    public ResponseEntity<List<String>> getDoctorSlots(
+            @PathVariable Long doctorId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ResponseEntity.ok(appointmentService.getDoctorAvailableSlots(doctorId, date));
+    }
+
+
 }

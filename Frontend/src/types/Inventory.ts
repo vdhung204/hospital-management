@@ -25,3 +25,12 @@ export interface ImportItem {
   expiryDate: string;
   quantity: number;
 }
+export interface DrugBatch {
+  id: number;
+  drugId: number;
+  drugCode: string;
+  drugName: string;
+  batchNumber: string;
+  expiryDate: string; // YYYY-MM-DD
+  quantityOnHand: number;
+}

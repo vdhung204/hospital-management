@@ -20,6 +20,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                                          @Param("fromDate") LocalDateTime fromDate,
                                          @Param("status") String status);
     List<Appointment> findByPatient_Id(Long patientId);
+    List<Appointment> findByPatientIdOrderByScheduledAtDesc(Long patientId);
 
     List<Appointment> findByDepartment_Id(Long departmentId);
 
@@ -27,4 +28,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByScheduledAtBetween(LocalDateTime from, LocalDateTime to);
     List<Appointment> findByPatientIdAndScheduledAtAfterOrderByScheduledAtAsc(Long patientId, LocalDateTime now);
+    List<Appointment> findByDoctorIdAndScheduledAtBetweenAndStatusNot(
+            Long doctorId,
+            LocalDateTime start,
+            LocalDateTime end,
+            String status
+    );
 }
