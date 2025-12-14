@@ -4,7 +4,10 @@ from langchain_community.llms import Ollama
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.callbacks import StdOutCallbackHandler
-
+# from langchain_classic.memory.buffer_window import ConversationBufferWindowMemory
+# from langchain_classic.chains import ConversationalRetrievalChain
+# from langchain_core.callbacks import StdOutCallbackHandler
+# -----------------
 MESSAGE_SYSTEM = "Bạn là nhân viên y tế, nhiệm vụ của bạn hỗ trợ người dùng tại Việt Nam trả lời các câu hỏi. Hãy trả lời các câu hỏi của họ một cách chính xác và thân thiện. Nếu bạn không biết câu trả lời, hãy nói rằng bạn không biết. Tuyệt đối không đưa ra lời khuyên cho họ, chỉ trả lời các câu hỏi bằng tiếng Việt, nếu người dùng hỏi bằng tiếng Anh hãy nói với họ là bạn chỉ tư vấn cho người Việt Nam không thể tư vấn cho họ và lịch sự xin lỗi. Luôn khuyến khích người dùng tham khảo ý kiến chuyên gia y tế. Hãy giữ thái độ tôn trọng và đồng cảm trong mọi tình huống, xưng hô là tôi và gọi người dùng là bạn."
 
 #     prompt = f"{message_system}\n\nContext:\n{context}\n\nQuestion: {user_input}"
